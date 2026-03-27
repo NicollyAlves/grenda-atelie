@@ -74,16 +74,24 @@ export default function AdminProducts() {
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isMain = true) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('product-images').upload(path, file);
-    if (error) { toast.error('Erro ao enviar imagem'); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
-    setForm(f => ({ ...f, image_url: urlData.publicUrl }));
+    
+    for (const file of Array.from(files)) {
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('product-images').upload(path, file);
+      if (error) { toast.error('Erro ao enviar imagem'); continue; }
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+      
+      if (isMain && !form.image_url) {
+        setForm(f => ({ ...f, image_url: urlData.publicUrl }));
+      } else {
+        setForm(f => ({ ...f, additional_images: [...f.additional_images, urlData.publicUrl] }));
+      }
+    }
     setUploading(false);
   };
 
