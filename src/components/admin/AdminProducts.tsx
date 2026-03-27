@@ -40,6 +40,7 @@ export default function AdminProducts() {
         price: parseFloat(form.price),
         category: form.category || null,
         image_url: form.image_url || null,
+        additional_images: form.additional_images,
         in_stock: form.in_stock,
         stock_quantity: parseInt(form.stock_quantity) || 0,
       };
