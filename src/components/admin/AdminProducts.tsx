@@ -10,11 +10,12 @@ interface ProductForm {
   price: string;
   category: string;
   image_url: string;
+  additional_images: string[];
   in_stock: boolean;
   stock_quantity: string;
 }
 
-const emptyForm: ProductForm = { name: '', description: '', price: '', category: '', image_url: '', in_stock: true, stock_quantity: '0' };
+const emptyForm: ProductForm = { name: '', description: '', price: '', category: '', image_url: '', additional_images: [], in_stock: true, stock_quantity: '0' };
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
