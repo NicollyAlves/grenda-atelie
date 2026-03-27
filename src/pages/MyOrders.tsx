@@ -1,8 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Package } from 'lucide-react';
+import { Package, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const statusColors: Record<string, string> = {
   pendente: 'bg-accent text-accent-foreground',
@@ -14,6 +26,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function MyOrders() {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const { data: orders, isLoading } = useQuery({
@@ -27,6 +40,24 @@ export default function MyOrders() {
         .order('created_at', { ascending: false });
       return data ?? [];
     },
+  });
+
+  const deleteOrder = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-orders', user?.id] });
+      toast.success('Pedido removido do histórico!');
+    },
+    onError: (error) => {
+      console.error('Error deleting order:', error);
+      toast.error('Erro ao remover pedido. Tente novamente.');
+    }
   });
 
   if (isLoading) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Carregando...</div>;
@@ -76,7 +107,44 @@ export default function MyOrders() {
               </div>
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
                 <span className="text-sm text-muted-foreground hover:text-primary transition-colors">Clique para ver mais detalhes ou falar no Chat</span>
-                <span className="font-bold text-primary">R$ {order.total.toFixed(2).replace('.', ',')}</span>
+                <div className="flex items-center gap-4">
+                  <span className="font-bold text-primary">R$ {order.total.toFixed(2).replace('.', ',')}</span>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-full hover:bg-destructive/10"
+                        title="Apagar pedido"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Apagar pedido do histórico?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação removerá permanentemente o pedido do seu histórico. Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteOrder.mutate(order.id);
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Apagar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             </Link>
           ))}
