@@ -85,6 +85,7 @@ export type Database = {
       }
       products: {
         Row: {
+          additional_images: string[] | null
           category: string | null
           created_at: string
           description: string | null
@@ -97,6 +98,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          additional_images?: string[] | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          additional_images?: string[] | null
           category?: string | null
           created_at?: string
           description?: string | null
