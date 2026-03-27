@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ShoppingBag, ArrowLeft, MessageCircle, Package } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export default function ProductDetail() {
@@ -13,6 +13,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [ordering, setOrdering] = useState(false);
   const [notes, setNotes] = useState('');
+  const [selectedImg, setSelectedImg] = useState(0);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -56,15 +57,31 @@ export default function ProductDetail() {
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="aspect-square rounded-xl overflow-hidden bg-muted">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
+        {(() => {
+          const allImages = [product.image_url, ...((product as any).additional_images || [])].filter(Boolean) as string[];
+          return (
+            <div className="space-y-3">
+              <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+                {allImages.length > 0 ? (
+                  <img src={allImages[selectedImg] || allImages[0]} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+              {allImages.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {allImages.map((img, i) => (
+                    <button key={i} onClick={() => setSelectedImg(i)} className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${i === selectedImg ? 'border-primary' : 'border-transparent'}`}>
+                      <img src={img} alt={`${product.name} ${i+1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
         <div>
           {product.category && <span className="badge-category mb-3 inline-block">{product.category}</span>}
           <h1 className="font-display text-3xl font-bold text-foreground mb-4">{product.name}</h1>
