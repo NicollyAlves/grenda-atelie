@@ -135,10 +135,29 @@ export default function AdminProducts() {
               </div>
               <input placeholder="Categoria (ex: Bolsa, Mochila)" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="input-styled" />
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Imagem do produto</label>
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm text-muted-foreground" />
+                <label className="text-sm font-medium text-foreground mb-1 block">Imagem principal</label>
+                <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true)} className="text-sm text-muted-foreground" />
+                {form.image_url && (
+                  <div className="relative mt-2 inline-block">
+                    <img src={form.image_url} alt="Preview" className="w-24 h-24 rounded-lg object-cover" />
+                    <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1 block">Imagens adicionais</label>
+                <input type="file" accept="image/*" multiple onChange={e => handleImageUpload(e, false)} className="text-sm text-muted-foreground" />
+                {form.additional_images.length > 0 && (
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {form.additional_images.map((url, i) => (
+                      <div key={i} className="relative inline-block">
+                        <img src={url} alt={`Extra ${i+1}`} className="w-20 h-20 rounded-lg object-cover" />
+                        <button type="button" onClick={() => setForm(f => ({ ...f, additional_images: f.additional_images.filter((_, j) => j !== i) }))} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {uploading && <p className="text-xs text-muted-foreground mt-1">Enviando...</p>}
-                {form.image_url && <img src={form.image_url} alt="Preview" className="mt-2 w-24 h-24 rounded-lg object-cover" />}
               </div>
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))} className="rounded" />
