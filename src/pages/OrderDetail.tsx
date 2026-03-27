@@ -18,12 +18,11 @@ export default function OrderDetail() {
     queryKey: ['order', id],
     enabled: !!user && !!id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: orderData, error } = await supabase
         .from('orders')
         .select(`
           *,
-          order_items(*, products(name, image_url)),
-          profiles:user_id(full_name, phone)
+          order_items(*, products(name, image_url))
         `)
         .eq('id', id!)
         .maybeSingle();
@@ -31,8 +30,15 @@ export default function OrderDetail() {
       if (error) {
         console.error('Error fetching order from supabase:', error);
         toast.error('Ocorreu um erro ao carregar o pedido.');
+        throw error;
       }
-      return data;
+      
+      if (orderData) {
+        const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('user_id', orderData.user_id).maybeSingle();
+        (orderData as any).profiles = profile;
+      }
+      
+      return orderData;
     },
   });
 

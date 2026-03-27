@@ -12,11 +12,22 @@ export default function AdminOrders() {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: ordersData } = await supabase
         .from('orders')
-        .select('*, order_items(*, products(name)), profiles:user_id(full_name, phone)')
+        .select('*, order_items(*, products(name))')
         .order('created_at', { ascending: false });
-      return data ?? [];
+        
+      if (ordersData && ordersData.length > 0) {
+        const userIds = [...new Set(ordersData.map((o: any) => o.user_id))];
+        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, phone').in('user_id', userIds);
+        
+        return ordersData.map((order: any) => ({
+          ...order,
+          profiles: profiles?.find((p: any) => p.user_id === order.user_id) || null
+        }));
+      }
+      
+      return ordersData || [];
     },
   });
 
