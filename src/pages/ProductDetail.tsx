@@ -13,6 +13,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [ordering, setOrdering] = useState(false);
   const [notes, setNotes] = useState('');
+  const [selectedImg, setSelectedImg] = useState(0);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
