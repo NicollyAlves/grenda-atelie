@@ -26,16 +26,30 @@ export default function Checkout() {
   const productTotal = product.price * quantity;
   const total = productTotal + (shippingFee || 0);
 
+  // Calcula a distância usando a fórmula de Haversine (linha reta)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Raio da Terra em KM
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distância em KM
+  };
+
   const calculateShipping = async () => {
     if (cep.length < 8) {
       toast.error('Digite um CEP válido.');
       return;
     }
+    
     setCalculating(true);
     try {
-      // Mock de cálculo:
-      // Busca CEP na API pública para fingir um cálculo real de estado
-      const res = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
+      // 1. Busca os dados de endereço do CEP via ViaCEP
+      const cepClean = cep.replace(/\D/g, '');
+      const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
       const data = await res.json();
       
       if (data.erro) {
@@ -44,13 +58,58 @@ export default function Checkout() {
          return;
       }
 
-      // Lógica Mock: Mesmo estado (ex: SP) = R$ 15, Outros = R$ 45
-      // Simulação considerando Ateliê em SP
-      const distanceFee = data.uf === 'SP' ? 15.00 : 45.00;
-      setShippingFee(distanceFee);
-      toast.success(`Frete calculado para ${data.localidade} - ${data.uf}`);
+      // Regra de fallback para entregas fora de Manaus e do Amazonas:
+      if (data.uf !== 'AM') {
+        setShippingFee(45.00); // Taxa fixa p/ outros estados (ex: Correios)
+        toast.success(`Frete fixo para fora do estado (${data.uf})`);
+        return;
+      }
+      
+      if (data.localidade !== 'Manaus') {
+        setShippingFee(25.00); // Taxa fixa interior do Amazonas
+        toast.success(`Frete fixo para Interior do AM (${data.localidade})`);
+        return;
+      }
+
+      // 2. Tenta pegar a lat/lon exata usando Nominatim (OpenStreetMap)
+      // Usamos a rua e o bairro para ter maior precisão, caso falhe tentamos só bairro
+      const query = encodeURIComponent(`${data.logradouro}, ${data.bairro}, Manaus, Amazonas, Brasil`);
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+      let geoData = await geoRes.json();
+
+      // Fallback geográfico se a rua for muito nova/desconhecida: procura pelo bairro
+      if (!geoData || geoData.length === 0) {
+        const fallbackQuery = encodeURIComponent(`${data.bairro}, Manaus, Amazonas, Brasil`);
+        const fallbackRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fallbackQuery}&limit=1`);
+        geoData = await fallbackRes.json();
+      }
+
+      // Coordenadas de origem do Ateliê: Rua São Pedro, 75, Compensa, Manaus
+      const ORIGIN_LAT = -3.1118;
+      const ORIGIN_LON = -60.0381;
+
+      if (geoData && geoData.length > 0) {
+        const destLat = parseFloat(geoData[0].lat);
+        const destLon = parseFloat(geoData[0].lon);
+        
+        const distanceKm = calculateDistance(ORIGIN_LAT, ORIGIN_LON, destLat, destLon);
+        
+        // Simulação do Uber Moto: R$ 4.00 base + R$ 1.50 por Km + margem pequena(1km)
+        // Linha reta tende a ser menor que o trajeto real, então multiplicamos a distância por um fator (ex: 1.3 p/ ruas)
+        const realDistanceEstimate = distanceKm * 1.3; 
+        const motoFee = 4.00 + (realDistanceEstimate * 1.50);
+        
+        setShippingFee(Number(motoFee.toFixed(2)));
+        toast.success(`Frete Uber Moto calculado! (~${realDistanceEstimate.toFixed(1)} km)`);
+      } else {
+         // Último caso de "falha" - Endereço não mapeado no AM, usa base fixa local
+         setShippingFee(15.00);
+         toast.info('Frete local padrão aplicado (Endereço não geolocalizado exato)');
+      }
+
     } catch (error) {
-      toast.error('Erro ao calcular frete.');
+      toast.error('Erro ao calcular frete com GPS. Usando taxa base.');
+      setShippingFee(15.00);
     } finally {
       setCalculating(false);
     }
