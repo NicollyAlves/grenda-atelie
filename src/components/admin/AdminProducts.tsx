@@ -102,6 +102,7 @@ export default function AdminProducts() {
       price: String(p.price),
       category: p.category || '',
       image_url: p.image_url || '',
+      additional_images: p.additional_images || [],
       in_stock: p.in_stock,
       stock_quantity: String(p.stock_quantity ?? 0),
     });
