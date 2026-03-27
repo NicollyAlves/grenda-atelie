@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import heroBg from '@/assets/hero-bg.jpg';
 import ProductCard from '@/components/ProductCard';
 import { ArrowRight, Scissors, Heart, Star } from 'lucide-react';
 
@@ -16,20 +15,30 @@ export default function Index() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-        <img src={heroBg} alt="Grenda Ateliê" className="absolute inset-0 w-full h-full object-cover" width={1920} height={1080} />
-        <div className="absolute inset-0 bg-foreground/60" />
+      {/* Hero — clean gradient, no AI image */}
+      <section className="relative min-h-[65vh] flex items-center justify-center overflow-hidden" style={{ background: 'var(--gradient-hero)' }}>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-primary-foreground/20 blur-3xl" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
+        </div>
         <div className="relative z-10 text-center px-4 animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4 font-display">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary-foreground/20 text-primary-foreground text-xs font-medium tracking-wider uppercase mb-6">
+            ✨ Feito à mão com amor
+          </span>
+          <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4 font-display leading-tight">
             Grenda Ateliê
           </h1>
           <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-lg mx-auto font-body">
             Bolsas, mochilas e necessaires personalizadas, feitas à mão com amor e capricho
           </p>
-          <Link to="/produtos" className="btn-hero inline-flex items-center gap-2">
-            Ver Produtos <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/produtos" className="btn-hero inline-flex items-center gap-2 bg-primary-foreground text-foreground hover:bg-primary-foreground/90">
+              Ver Produtos <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a href="https://wa.me/message/L5LS7YREIUINO1" target="_blank" rel="noopener noreferrer" className="btn-hero inline-flex items-center gap-2 bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
+              Fale no WhatsApp
+            </a>
+          </div>
         </div>
       </section>
 

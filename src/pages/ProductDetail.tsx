@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ShoppingBag, ArrowLeft, MessageCircle } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, MessageCircle, Package } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -23,26 +23,18 @@ export default function ProductDetail() {
   });
 
   const handleOrder = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    if (!user) { navigate('/login'); return; }
     if (!product) return;
     setOrdering(true);
     try {
       const total = product.price * quantity;
       const { data: order, error: orderErr } = await supabase.from('orders').insert({
-        user_id: user.id,
-        total,
-        notes: notes || null,
+        user_id: user.id, total, notes: notes || null,
       }).select().single();
       if (orderErr) throw orderErr;
 
       const { error: itemErr } = await supabase.from('order_items').insert({
-        order_id: order.id,
-        product_id: product.id,
-        quantity,
-        unit_price: product.price,
+        order_id: order.id, product_id: product.id, quantity, unit_price: product.price,
       });
       if (itemErr) throw itemErr;
 
@@ -77,14 +69,28 @@ export default function ProductDetail() {
           {product.category && <span className="badge-category mb-3 inline-block">{product.category}</span>}
           <h1 className="font-display text-3xl font-bold text-foreground mb-4">{product.name}</h1>
           {product.description && <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>}
-          <p className="text-3xl font-bold text-primary mb-6">R$ {product.price.toFixed(2).replace('.', ',')}</p>
+          <p className="text-3xl font-bold text-primary mb-2">R$ {product.price.toFixed(2).replace('.', ',')}</p>
+
+          {/* Stock info */}
+          <div className="flex items-center gap-2 mb-6 text-sm">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            {product.in_stock ? (
+              <span className="text-muted-foreground">
+                {product.stock_quantity > 0 ? `${product.stock_quantity} unidades em estoque` : 'Disponível sob encomenda'}
+              </span>
+            ) : (
+              <span className="text-destructive font-medium">Esgotado</span>
+            )}
+          </div>
 
           {product.in_stock ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-foreground">Quantidade:</label>
                 <select value={quantity} onChange={e => setQuantity(Number(e.target.value))} className="input-styled w-20">
-                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                  {Array.from({ length: Math.min(product.stock_quantity || 5, 10) }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
                 </select>
               </div>
               <textarea
@@ -107,7 +113,17 @@ export default function ProductDetail() {
               </a>
             </div>
           ) : (
-            <p className="text-destructive font-medium">Produto esgotado</p>
+            <div className="space-y-3">
+              <p className="text-destructive font-medium">Produto esgotado</p>
+              <a
+                href={`https://wa.me/message/L5LS7YREIUINO1?text=${encodeURIComponent(`Olá! Gostaria de saber quando o produto "${product.name}" estará disponível.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-hero inline-flex items-center gap-2"
+              >
+                <MessageCircle className="h-4 w-4" /> Avisar quando disponível
+              </a>
+            </div>
           )}
         </div>
       </div>
