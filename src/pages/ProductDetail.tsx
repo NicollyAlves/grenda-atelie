@@ -1,0 +1,116 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { ShoppingBag, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+export default function ProductDetail() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [quantity, setQuantity] = useState(1);
+  const [ordering, setOrdering] = useState(false);
+  const [notes, setNotes] = useState('');
+
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      const { data } = await supabase.from('products').select('*').eq('id', id!).single();
+      return data;
+    },
+  });
+
+  const handleOrder = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!product) return;
+    setOrdering(true);
+    try {
+      const total = product.price * quantity;
+      const { data: order, error: orderErr } = await supabase.from('orders').insert({
+        user_id: user.id,
+        total,
+        notes: notes || null,
+      }).select().single();
+      if (orderErr) throw orderErr;
+
+      const { error: itemErr } = await supabase.from('order_items').insert({
+        order_id: order.id,
+        product_id: product.id,
+        quantity,
+        unit_price: product.price,
+      });
+      if (itemErr) throw itemErr;
+
+      toast.success('Pedido realizado com sucesso! Acompanhe em "Meus Pedidos".');
+      navigate('/meus-pedidos');
+    } catch {
+      toast.error('Erro ao realizar pedido. Tente novamente.');
+    } finally {
+      setOrdering(false);
+    }
+  };
+
+  if (isLoading) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Carregando...</div>;
+  if (!product) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Produto não encontrado.</div>;
+
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Voltar
+      </button>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
+            </div>
+          )}
+        </div>
+        <div>
+          {product.category && <span className="badge-category mb-3 inline-block">{product.category}</span>}
+          <h1 className="font-display text-3xl font-bold text-foreground mb-4">{product.name}</h1>
+          {product.description && <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>}
+          <p className="text-3xl font-bold text-primary mb-6">R$ {product.price.toFixed(2).replace('.', ',')}</p>
+
+          {product.in_stock ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground">Quantidade:</label>
+                <select value={quantity} onChange={e => setQuantity(Number(e.target.value))} className="input-styled w-20">
+                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+              <textarea
+                placeholder="Observações (personalização, cor, etc.)"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                className="input-styled h-24 resize-none"
+              />
+              <button onClick={handleOrder} disabled={ordering} className="btn-hero w-full flex items-center justify-center gap-2">
+                {ordering ? 'Enviando...' : 'Fazer Pedido'}
+              </button>
+              <a
+                href={`https://wa.me/message/L5LS7YREIUINO1?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 inline mr-1" />
+                Ou fale pelo WhatsApp
+              </a>
+            </div>
+          ) : (
+            <p className="text-destructive font-medium">Produto esgotado</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
