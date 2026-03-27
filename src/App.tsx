@@ -9,7 +9,9 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import MyOrders from "./pages/MyOrders";
+import MyAccount from "./pages/MyAccount";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -29,7 +31,9 @@ const App = () => (
                 <Route path="/produtos" element={<Products />} />
                 <Route path="/produto/:id" element={<ProductDetail />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/meus-pedidos" element={<MyOrders />} />
+                <Route path="/minha-conta" element={<MyAccount />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

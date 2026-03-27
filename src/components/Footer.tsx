@@ -13,7 +13,7 @@ export default function Footer() {
             Bolsas, mochilas e necessaires feitas à mão com amor e capricho ✨
           </p>
           <div className="flex items-center gap-4">
-            <a href="https://www.instagram.com/grenda_atelie" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://www.instagram.com/grenda_atelie/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
               <Instagram className="h-5 w-5" />
             </a>
             <a href="https://wa.me/message/L5LS7YREIUINO1" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
