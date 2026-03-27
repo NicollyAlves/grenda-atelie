@@ -18,7 +18,7 @@ export default function OrderDetail() {
     queryKey: ['order', id],
     enabled: !!user && !!id,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
@@ -26,7 +26,12 @@ export default function OrderDetail() {
           profiles:user_id(full_name, phone)
         `)
         .eq('id', id!)
-        .single();
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching order from supabase:', error);
+        toast.error('Ocorreu um erro ao carregar o pedido.');
+      }
       return data;
     },
   });
