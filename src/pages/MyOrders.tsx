@@ -47,8 +47,9 @@ export default function MyOrders() {
                 <span className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleDateString('pt-BR')}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-muted text-muted-foreground'}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${statusColors[order.status] || 'bg-muted text-muted-foreground'}`}>
                   {order.status.replace('_', ' ')}
+                  {order.payment_method === 'dinheiro' && order.payment_status === 'pendente' && order.status !== 'aguardando_pagamento' ? ' (Aguardando Pgto)' : ''}
                 </span>
               </div>
               <div className="space-y-2">

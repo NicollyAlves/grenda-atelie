@@ -59,11 +59,17 @@ export default function OrderChat({ orderId }: { orderId: string }) {
     const msg = newMessage;
     setNewMessage(''); // optimistic reset
 
-    await supabase.from('order_messages').insert({
+    const { error } = await supabase.from('order_messages').insert({
       order_id: orderId,
       user_id: user.id,
       message: msg.trim()
     });
+    
+    if (error) {
+      console.error('Chat send error:', error);
+      toast.error('Erro ao enviar mensagem. Tem certeza que o chat está liberado?');
+      setNewMessage(msg); // revert
+    }
   };
 
   if (loading) return <div className="text-center text-sm p-4">Carregando chat...</div>;

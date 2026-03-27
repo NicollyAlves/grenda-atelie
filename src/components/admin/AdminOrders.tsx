@@ -74,7 +74,11 @@ export default function AdminOrders() {
                 }}
                 className="input-styled w-auto text-sm"
               >
-                {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                {statuses.map(s => (
+                  <option key={s} value={s}>
+                    {s} {order.payment_method === 'dinheiro' && order.payment_status === 'pendente' && s !== 'aguardando_pagamento' ? '(Aguardando Pagamento)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">

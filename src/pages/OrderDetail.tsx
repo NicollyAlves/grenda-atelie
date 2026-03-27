@@ -93,6 +93,7 @@ export default function OrderDetail() {
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border uppercase">
                 {order.status.replace('_', ' ')}
+                {order.payment_method === 'dinheiro' && order.payment_status === 'pendente' && order.status !== 'aguardando_pagamento' ? ' (Aguardando Pagamento)' : ''}
               </span>
             </div>
 
@@ -100,7 +101,11 @@ export default function OrderDetail() {
                <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                  <span className="font-medium text-sm">Atualizar Status:</span>
                  <select value={order.status} onChange={handleStatusChange} className="input-styled w-auto text-sm">
-                   {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                   {statuses.map(s => (
+                     <option key={s} value={s}>
+                       {s} {order.payment_method === 'dinheiro' && order.payment_status === 'pendente' && s !== 'aguardando_pagamento' ? '(Aguardando Pagamento)' : ''}
+                     </option>
+                   ))}
                  </select>
                </div>
             )}
