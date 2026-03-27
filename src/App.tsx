@@ -14,6 +14,8 @@ import MyOrders from "./pages/MyOrders";
 import MyAccount from "./pages/MyAccount";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
+import OrderDetail from "./pages/OrderDetail";
 
 const queryClient = new QueryClient();
 
@@ -30,9 +32,11 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/produtos" element={<Products />} />
                 <Route path="/produto/:id" element={<ProductDetail />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/meus-pedidos" element={<MyOrders />} />
+                <Route path="/pedido/:id" element={<OrderDetail />} />
                 <Route path="/minha-conta" element={<MyAccount />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />

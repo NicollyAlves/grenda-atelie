@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const statusColors: Record<string, string> = {
   pendente: 'bg-accent text-accent-foreground',
@@ -41,13 +42,13 @@ export default function MyOrders() {
       ) : (
         <div className="space-y-4">
           {orders.map(order => (
-            <div key={order.id} className="card-product p-5">
+            <Link key={order.id} to={`/pedido/${order.id}`} className="block card-product p-5 hover:border-primary transition-colors hover:shadow-md">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleDateString('pt-BR')}
                 </span>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-muted text-muted-foreground'}`}>
-                  {order.status}
+                  {order.status.replace('_', ' ')}
                 </span>
               </div>
               <div className="space-y-2">
@@ -73,11 +74,10 @@ export default function MyOrders() {
                 ))}
               </div>
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-sm text-muted-foreground hover:text-primary transition-colors">Clique para ver mais detalhes ou falar no Chat</span>
                 <span className="font-bold text-primary">R$ {order.total.toFixed(2).replace('.', ',')}</span>
               </div>
-              {order.notes && <p className="text-xs text-muted-foreground mt-2 italic">Obs: {order.notes}</p>}
-            </div>
+            </Link>
           ))}
         </div>
       )}

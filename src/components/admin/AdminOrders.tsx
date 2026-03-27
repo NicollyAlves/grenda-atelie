@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
-const statuses = ['pendente', 'confirmado', 'em produção', 'enviado', 'entregue', 'cancelado'];
+const statuses = ['aguardando_pagamento', 'pendente', 'em andamento', 'indo para entrega', 'concluido', 'recusado', 'cancelado'];
 
 export default function AdminOrders() {
   const queryClient = useQueryClient();
@@ -20,8 +21,10 @@ export default function AdminOrders() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
+      const updateData: any = { status };
+      if (notes !== undefined) updateData.notes = notes;
+      const { error } = await supabase.from('orders').update(updateData).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -47,7 +50,17 @@ export default function AdminOrders() {
               </div>
               <select
                 value={order.status}
-                onChange={e => updateStatus.mutate({ id: order.id, status: e.target.value })}
+                onChange={e => {
+                  const newStatus = e.target.value;
+                  if (newStatus === 'recusado') {
+                    const reason = window.prompt('Informe o motivo da recusa para o cliente:');
+                    if (reason) {
+                      updateStatus.mutate({ id: order.id, status: newStatus, notes: `Recusado: ${reason}` });
+                    }
+                  } else {
+                    updateStatus.mutate({ id: order.id, status: newStatus });
+                  }
+                }}
                 className="input-styled w-auto text-sm"
               >
                 {statuses.map(s => <option key={s} value={s}>{s}</option>)}
@@ -61,11 +74,18 @@ export default function AdminOrders() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between mt-3 pt-3 border-t border-border">
+            <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
               <span className="text-sm font-medium text-foreground">Total</span>
               <span className="font-bold text-primary">R$ {order.total.toFixed(2).replace('.', ',')}</span>
             </div>
-            {order.notes && <p className="text-xs text-muted-foreground mt-2 italic">Obs: {order.notes}</p>}
+            {order.notes && !order.notes.startsWith('Recusado:') && <p className="text-xs text-muted-foreground mt-2 italic">Obs: {order.notes}</p>}
+            {order.notes && order.notes.startsWith('Recusado:') && <p className="text-xs text-destructive mt-2 font-medium">{order.notes}</p>}
+            
+            <div className="mt-4 pt-4 border-t border-border/50 text-right">
+              <Link to={`/pedido/${order.id}`} className="btn-hero text-sm px-4 py-2 inline-block">
+                Acessar Pedido e Chat
+              </Link>
+            </div>
           </div>
         ))
       )}

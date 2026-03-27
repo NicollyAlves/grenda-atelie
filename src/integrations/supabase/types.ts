@@ -62,6 +62,9 @@ export type Database = {
           total: number
           updated_at: string
           user_id: string
+          payment_method: string | null
+          payment_status: string | null
+          shipping_fee: number | null
         }
         Insert: {
           created_at?: string
@@ -71,6 +74,9 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id: string
+          payment_method?: string | null
+          payment_status?: string | null
+          shipping_fee?: number | null
         }
         Update: {
           created_at?: string
@@ -80,8 +86,43 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          shipping_fee?: number | null
         }
         Relationships: []
+      }
+      order_messages: {
+        Row: {
+          id: string
+          order_id: string
+          user_id: string
+          message: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          user_id: string
+          message: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          user_id?: string
+          message?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       products: {
         Row: {

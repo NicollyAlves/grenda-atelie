@@ -23,29 +23,18 @@ export default function ProductDetail() {
     },
   });
 
-  const handleOrder = async () => {
+  const handleOrder = () => {
     if (!user) { navigate('/login'); return; }
     if (!product) return;
-    setOrdering(true);
-    try {
-      const total = product.price * quantity;
-      const { data: order, error: orderErr } = await supabase.from('orders').insert({
-        user_id: user.id, total, notes: notes || null,
-      }).select().single();
-      if (orderErr) throw orderErr;
-
-      const { error: itemErr } = await supabase.from('order_items').insert({
-        order_id: order.id, product_id: product.id, quantity, unit_price: product.price,
-      });
-      if (itemErr) throw itemErr;
-
-      toast.success('Pedido realizado com sucesso! Acompanhe em "Meus Pedidos".');
-      navigate('/meus-pedidos');
-    } catch {
-      toast.error('Erro ao realizar pedido. Tente novamente.');
-    } finally {
-      setOrdering(false);
-    }
+    
+    // Redirect to Checkout page instead of saving directly.
+    navigate('/checkout', {
+      state: {
+        product,
+        quantity,
+        notes
+      }
+    });
   };
 
   if (isLoading) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Carregando...</div>;
@@ -117,7 +106,7 @@ export default function ProductDetail() {
                 className="input-styled h-24 resize-none"
               />
               <button onClick={handleOrder} disabled={ordering} className="btn-hero w-full flex items-center justify-center gap-2">
-                {ordering ? 'Enviando...' : 'Fazer Pedido'}
+                Ir para o Pagamento
               </button>
               <a
                 href={`https://wa.me/message/L5LS7YREIUINO1?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name}`)}`}
