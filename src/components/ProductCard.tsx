@@ -15,52 +15,49 @@ export default function ProductCard({ id, name, price, image_url, category, in_s
   return (
     <Link 
       to={`/produto/${id}`} 
-      className="group card-capsule block h-full text-center"
+      className="group card-product block h-full bg-white transition-all duration-300"
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-t-full">
+      <div className="relative aspect-square overflow-hidden bg-rose-50/10">
         {image_url ? (
           <img
             src={image_url}
             alt={name}
-            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
-            <ShoppingBag className="h-12 w-12 text-muted-foreground/20" />
+            <ShoppingBag className="h-10 w-10 text-muted-foreground/30" />
           </div>
         )}
         
-        {/* Soft Aura Overlay */}
-        <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        
         {!in_stock && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-foreground text-background px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
               Esgotado
+            </span>
+          </div>
+        )}
+        
+        {category && (
+          <div className="absolute top-3 left-3">
+            <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest text-primary shadow-sm">
+              {category}
             </span>
           </div>
         )}
       </div>
       
-      <div className="p-8 md:p-12 space-y-4">
-        {category && (
-          <span className="text-primary/60 text-[10px] font-black uppercase tracking-[0.3em]">
-            {category}
-          </span>
-        )}
-        
-        <h3 className="font-display text-2xl md:text-3xl font-black text-foreground group-hover:text-primary transition-colors duration-500 leading-tight">
+      <div className="p-4 md:p-6 space-y-2">
+        <h3 className="font-display text-sm md:text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
           {name}
         </h3>
         
-        <div className="flex flex-col items-center gap-4 pt-4">
-          <span className="text-2xl md:text-4xl font-serif italic text-primary/80">
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-lg md:text-xl font-bold text-primary">
             R$ {price.toFixed(2).replace('.', ',')}
           </span>
-          <div className="w-12 h-12 rounded-full border border-primary/20 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
-            <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-2" />
-          </div>
+          <ArrowRight className="w-4 h-4 text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
         </div>
       </div>
     </Link>
