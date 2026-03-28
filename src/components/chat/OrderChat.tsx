@@ -76,11 +76,19 @@ export default function OrderChat({ orderId }: { orderId: string }) {
     const msg = newMessage;
     setNewMessage(''); // optimistic reset
 
-    const { error } = await supabase.from('order_messages').insert({
+    const { data: insertedMsg, error } = await supabase.from('order_messages').insert({
       order_id: orderId,
       user_id: user.id,
       message: msg.trim()
-    });
+    }).select().single();
+    
+    if (!error && insertedMsg) {
+       // Only add if not already added by subscription to avoid duplicates
+       setMessages(prev => {
+         if (prev.find(m => m.id === insertedMsg.id)) return prev;
+         return [...prev, insertedMsg];
+       });
+    }
     
     if (error) {
       console.error('Chat send error:', error);

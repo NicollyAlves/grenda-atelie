@@ -61,7 +61,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .eq('user_id', user!.id);
     
     if (!error && data) {
-      setItems(data);
+      setItems(data.map((item: any) => ({
+        ...item,
+        selected_image_url: item.selected_image_url
+      })));
     } else if (error) {
       console.error('Error loading DB cart:', error);
     }
@@ -85,6 +88,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           user_id: user.id,
           product_id: newItem.product_id,
           variant_id: newItem.variant_id,
+          selected_image_url: newItem.selected_image_url,
           quantity: newItem.quantity
         })
         .select('*, product:products(*), variant:product_variants(*)')

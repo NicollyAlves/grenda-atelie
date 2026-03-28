@@ -1,4 +1,4 @@
--- SQL para criar as tabelas que estão faltando no seu Supabase
+-- SQL ATUALIZADO PARA GRENDA ATELIÊ
 -- Copie e cole este código no Editor SQL do seu projeto Supabase
 
 -- 1. Tabela de Chat do Pedido
@@ -20,11 +20,21 @@ CREATE TABLE IF NOT EXISTS public.product_inquiries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3. Habilitar RLS (Segurança)
+-- 3. Adicionar coluna para persistir imagem escolhida no carrinho
+-- Se já existir, não fará nada.
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cart_items' AND column_name='selected_image_url') THEN
+    ALTER TABLE public.cart_items ADD COLUMN selected_image_url TEXT;
+  END IF;
+END $$;
+
+-- 4. Habilitar RLS (Segurança)
 ALTER TABLE public.order_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_inquiries ENABLE ROW LEVEL SECURITY;
 
--- 4. Políticas para Mensagens de Pedido
+-- 5. Políticas para Mensagens de Pedido
+DROP POLICY IF EXISTS "Users involved can view order messages" ON public.order_messages;
 CREATE POLICY "Users involved can view order messages" ON public.order_messages FOR SELECT
   USING (
     auth.uid() = user_id OR 
@@ -32,6 +42,7 @@ CREATE POLICY "Users involved can view order messages" ON public.order_messages 
     EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Users can insert order messages" ON public.order_messages;
 CREATE POLICY "Users can insert order messages" ON public.order_messages FOR INSERT
   WITH CHECK (
     auth.uid() = user_id AND (
@@ -40,9 +51,26 @@ CREATE POLICY "Users can insert order messages" ON public.order_messages FOR INS
     )
   );
 
--- 5. Políticas para Perguntas de Produtos
+-- 6. Políticas para Perguntas de Produtos
+DROP POLICY IF EXISTS "Users and admins can view inquiries" ON public.product_inquiries;
 CREATE POLICY "Users and admins can view inquiries" ON public.product_inquiries FOR SELECT 
   USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "Users and admins can insert inquiries" ON public.product_inquiries;
 CREATE POLICY "Users and admins can insert inquiries" ON public.product_inquiries FOR INSERT 
   WITH CHECK (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- 7. ATIVAR REALTIME (CRÍTICO PARA CHAT SEM F5)
+-- Adiciona as tabelas à publicação de tempo real do Supabase
+-- Verifique se sua publicação se chama 'supabase_realtime' (padrão)
+BEGIN;
+  DO $$
+  BEGIN
+    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.order_messages;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.product_inquiries;
+    ELSE
+      CREATE PUBLICATION supabase_realtime FOR TABLE public.order_messages, public.product_inquiries;
+    END IF;
+  END $$;
+COMMIT;

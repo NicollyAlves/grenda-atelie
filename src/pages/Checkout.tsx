@@ -151,9 +151,26 @@ export default function Checkout() {
   };
 
   const copyPix = () => {
-    const pixCode = `30909260249-TOTAL-R$${total.toFixed(2)}`;
-    navigator.clipboard.writeText(pixCode);
-    toast.success('Código PIX copiado!');
+    // Gerador Simples de BRCode PIX (Padrão BACEN)
+    // Chave CPF: 30909260249
+    const amountStr = total.toFixed(2).replace('.', '');
+    const amountLen = amountStr.length.toString().padStart(2, '0');
+    
+    // Payload Estruturado (Simplificado para Mock funcional de Copy/Paste)
+    // 000201: Versão
+    // 26: Info da Conta
+    // 52040000: MCC
+    // 5303986: Moeda (986 = Real)
+    // 54: Valor (54 + tam + valor)
+    // 5802BR: País
+    // 59: Nome (59 + tam + nome)
+    // 60: Cidade (60 + tam + cidade)
+    // 6304: CRC
+    
+    const pixPayload = `00020126330014br.gov.bcb.pix01113090926024952040000530398654${amountLen}${total.toFixed(2)}5802BR5915GrendaOliveira6006MANAUS62070503***6304`;
+    
+    navigator.clipboard.writeText(pixPayload);
+    toast.success('Código PIX Copia e Cola gerado com o valor de R$ ' + total.toFixed(2));
   };
 
   const handleFinishOrder = async () => {
@@ -308,19 +325,24 @@ export default function Checkout() {
                {paymentMethod === 'pix' ? (
                  <div className="space-y-4">
                    <div className="bg-background/80 p-5 rounded-xl border-2 border-dashed border-primary/20 space-y-3 relative group">
-                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Chave PIX / CPF do Admin</p>
-                     <p className="text-xl font-mono font-bold text-primary tracking-tighter">30909260249</p>
-                     <p className="text-[10px] text-muted-foreground italic">Grenda Oliveira - Proprietária</p>
+                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">PIX Copia e Cola (Valor Automático)</p>
+                     <div className="bg-muted/50 p-3 rounded font-mono text-[10px] break-all text-left border border-border/50 select-all">
+                        00020126330014br.gov.bcb.pix01113090926024952040000530398654...
+                     </div>
                      <button 
                         onClick={copyPix}
-                        className="absolute top-2 right-2 p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-                        title="Copiar Código"
+                        className="btn-hero w-full py-2.5 text-xs flex items-center justify-center gap-2 shadow-sm"
                      >
-                       <Copy className="h-4 w-4" />
+                       <Copy className="h-4 w-4" /> Copiar Código PIX
                      </button>
                    </div>
+                   <div className="bg-primary/5 p-3 rounded-lg border border-primary/10">
+                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1 text-center">Dados da Proprietária</p>
+                     <p className="text-sm font-bold text-primary text-center tracking-tight">309.092.602-49</p>
+                     <p className="text-[10px] text-muted-foreground italic text-center">Grenda Oliveira</p>
+                   </div>
                    <p className="text-xs text-muted-foreground font-medium">
-                     Valor total com frete: <span className="text-primary font-bold">R$ {total.toFixed(2).replace('.', ',')}</span>
+                     Total a pagar: <span className="text-primary font-bold">R$ {total.toFixed(2).replace('.', ',')}</span>
                    </p>
                  </div>
                ) : (

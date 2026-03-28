@@ -120,8 +120,12 @@ export default function OrderDetail() {
                 <Package className="h-5 w-5" /> Itens do Pedido
               </h3>
               {order.order_items?.map((item: any) => (
-                <div key={item.id} className="flex gap-4 items-center">
-                  <img src={item.variant?.image_url || item.products?.image_url} alt="" className="w-12 h-12 bg-muted rounded object-cover shadow-sm border border-border/50" />
+                <div key={item.id} className="flex gap-4 items-center p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                  <img 
+                    src={item.selected_image_url || item.variant?.image_url || item.products?.image_url} 
+                    alt="" 
+                    className="w-20 h-20 bg-muted rounded-xl object-cover shadow-sm border border-border/50 transition-transform hover:scale-105" 
+                  />
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.products?.name}</p>
                     {item.variant && <p className="text-[10px] text-primary font-bold uppercase tracking-wider">Modelo Específico</p>}

@@ -14,7 +14,7 @@ export default function AdminOrders() {
     queryFn: async () => {
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('*, order_items(*, products(name))')
+        .select('*, order_items(*, products(name, image_url), variant:product_variants(*))')
         .order('created_at', { ascending: false });
         
       if (ordersData && ordersData.length > 0) {
@@ -81,11 +81,22 @@ export default function AdminOrders() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-3">
               {order.order_items?.map((item: any) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-foreground">{item.products?.name} × {item.quantity}</span>
-                  <span className="text-muted-foreground">R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                <div key={item.id} className="flex items-center gap-3 py-1">
+                  <div className="w-14 h-14 rounded overflow-hidden bg-muted flex-shrink-0 border">
+                    <img 
+                      src={item.selected_image_url || item.variant?.image_url || item.products?.image_url} 
+                      alt="" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div className="flex-1 text-sm min-w-0">
+                    <p className="font-medium text-foreground truncate">{item.products?.name}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">
+                       {item.quantity} × R$ {item.unit_price.toFixed(2).replace('.', ',')}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
