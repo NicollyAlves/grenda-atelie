@@ -79,15 +79,15 @@ export default function Index() {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
-      {/* Features — RESTAURADA SIMPLICIDADE */}
-      <section className="py-24 bg-white/50 border-y border-primary/5">
+      {/* Features — REMOVIDO CINZA (AGORA MARROM) */}
+      <section className="py-24 bg-card/10 border-y border-primary/10">
         <div className="container mx-auto px-4 grid md:grid-cols-3 gap-12">
           {[
             { icon: Scissors, title: 'Feito à Mão', desc: 'Cada peça é única, costurada com dedicação e atenção aos detalhes.' },
             { icon: Heart, title: 'Personalizado', desc: 'Escolha cores, estampas e bordados para deixar sua peça exclusiva.' },
             { icon: Star, title: 'Qualidade', desc: 'Materiais de alta qualidade: couro sintético, PVC e tecidos selecionados.' },
           ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="text-center group p-6 hover:bg-white/40 transition-all rounded-3xl">
+            <div key={title} className="text-center group p-6 hover:bg-primary/5 transition-all rounded-3xl">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Icon className="h-7 w-7 text-primary" />
               </div>
@@ -115,8 +115,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 bg-primary/5">
+      {/* CTA — REMOVIDO CINZA */}
+      <section className="py-24 bg-card/40">
         <div className="container mx-auto px-4 text-center space-y-6">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">Sua Visão, Nossa Arte.</h2>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
