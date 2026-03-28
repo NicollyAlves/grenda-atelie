@@ -168,12 +168,12 @@ export default function ProductDetail() {
           
           return (
             <div className="space-y-3">
-              <div className="flex-1 w-full max-w-full">
-                <div className="relative rounded-2xl overflow-hidden bg-muted group shadow-lg border border-border/50 h-[50vh] sm:h-[60vh] md:aspect-square md:h-auto">
+              <div className="w-full">
+                <div className="relative rounded-2xl overflow-hidden group aspect-square">
                   <img 
                     src={allImages[selectedImg]?.url || product.image_url} 
                     alt={product.name} 
-                    className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105" 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                   />
                 </div>
               </div>
@@ -187,7 +187,7 @@ export default function ProductDetail() {
                         if (img.id) setSelectedVariantId(img.id);
                         else if (i === 0 && !product.has_variants) setSelectedVariantId(null);
                       }} 
-                      className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === selectedImg ? 'border-primary ring-2 ring-primary/20' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                      className={`w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all aspect-square ${i === selectedImg ? 'border-primary ring-2 ring-primary/20' : 'border-transparent opacity-70 hover:opacity-100'}`}
                     >
                       <img src={img.url} alt={`${product.name} ${i+1}`} className="w-full h-full object-cover" />
                     </button>

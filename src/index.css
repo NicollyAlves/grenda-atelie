@@ -75,8 +75,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary overflow-x-hidden;
     font-family: var(--font-body);
+    width: 100%;
+  }
+  html {
+    @apply overflow-x-hidden;
+    width: 100%;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
