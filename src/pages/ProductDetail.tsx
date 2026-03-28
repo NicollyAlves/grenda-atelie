@@ -409,7 +409,7 @@ export default function ProductDetail() {
               <div key={review.id} className="pb-6 border-b border-border/30 last:border-0 opacity-90 transition-opacity hover:opacity-100 group">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-foreground">{review.profiles?.full_name || 'Cliente Grenda'}</span>
+                    <span className="font-bold text-sm text-foreground">{review.profiles?.full_name || 'Cliente'}</span>
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map(star => (
                         <Star key={star} className={`w-3 h-3 ${review.rating >= star ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />

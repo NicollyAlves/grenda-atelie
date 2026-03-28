@@ -14,86 +14,92 @@ export default function Index() {
   });
 
   return (
-    <div className="relative overflow-hidden">
-      {/* LUXURY HERO — boutique style */}
-      <section className="relative min-h-[85vh] flex items-center pt-20 pb-12 overflow-hidden bg-gradient-to-br from-background via-rose-50/20 to-secondary/30">
-        {/* Animated Blobs */}
-        <div className="absolute top-[-10%] right-[-10%] blob opacity-60" />
-        <div className="absolute bottom-[-10%] left-[-10%] blob opacity-40 animate-float-slow" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* TEXT COLUMN */}
-            <div className="text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-primary/10 text-primary text-[11px] md:text-xs font-black tracking-widest uppercase">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                Feito à mão • Grenda Ateliê
+    <div className="relative min-h-screen bg-background isolate">
+      {/* ANIMATED MESH BLOBS (Global Background) */}
+      <div className="fixed inset-0 z-[-1] overflow-hidden">
+        <div className="mesh-blob blob-1" />
+        <div className="mesh-blob blob-2" />
+        <div className="mesh-blob blob-3" />
+      </div>
+
+      {/* ULTRA-WOW HERO */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-12 overflow-hidden">
+        <div className="container mx-auto px-4 z-10 flex flex-col items-center">
+          
+          {/* MARQUEE TOP */}
+          <div className="absolute top-0 left-0 w-full overflow-hidden whitespace-nowrap bg-primary/5 py-3 border-b border-primary/10 mb-20">
+            <div className="inline-block animate-marquee font-black text-[10px] uppercase tracking-[0.5em] text-primary/40">
+              Personalizado • Feito à Mão • Único • Sofisticado • Personalizado • Feito à Mão • Único • Sofisticado • Personalizado • Feito à Mão • Único • Sofisticado • 
+            </div>
+          </div>
+
+          <div className="w-full grid lg:grid-cols-2 gap-8 items-center mt-12">
+            
+            {/* TYPOGRAPHY COLUMN */}
+            <div className="text-center lg:text-left space-y-6 lg:space-y-10 order-2 lg:order-1">
+              <div className="space-y-0 text-reveal">
+                <h1 className="text-7xl md:text-8xl lg:text-[11rem] font-black leading-[0.75] tracking-tighter uppercase text-foreground">
+                  Grenda
+                </h1>
+                <div className="flex flex-col lg:flex-row items-center lg:items-end gap-2 lg:gap-4 overflow-visible">
+                  <h2 className="text-5xl md:text-7xl lg:text-[7rem] font-serif italic text-primary leading-none -mt-2 lg:-mt-6">
+                    Ateliê
+                  </h2>
+                  <div className="h-1 lg:h-3 flex-1 bg-primary/20 rounded-full mb-2 lg:mb-4 hidden lg:block" />
+                </div>
               </div>
               
-              <div className="space-y-4">
-                <h1 className="text-5xl md:text-8xl lg:text-[8rem] font-bold text-foreground leading-[0.85] tracking-tighter">
-                  Grenda <br />
-                  <span className="text-primary italic font-serif">Ateliê</span>
-                </h1>
-                <p className="text-lg md:text-2xl text-muted-foreground font-light max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                  Bolsas e acessórios personalizados que traduzem sua essência em <span className="text-foreground font-semibold">arte e costura</span>.
-                </p>
-              </div>
+              <p className="text-lg md:text-2xl text-muted-foreground font-light max-w-lg mx-auto lg:mx-0 leading-relaxed text-reveal [animation-delay:200ms]">
+                Transformando tecidos e sonhos em <span className="text-foreground font-bold underline decoration-primary/30 decoration-4">acessórios de luxo</span> que contam a sua história.
+              </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-                <Link to="/produtos" className="btn-hero group flex items-center gap-3">
-                  Explorar Coleção 
-                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-6 text-reveal [animation-delay:400ms]">
+                <Link to="/produtos" className="btn-wow group flex items-center justify-center gap-4">
+                  Explorar Agora 
+                  <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
                 </Link>
-                <a href="https://wa.me/message/L5LS7YREIUINO1" target="_blank" rel="noopener noreferrer" className="px-10 py-4 rounded-full border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all text-center">
-                  Consultar Encomenda
+                <a href="https://wa.me/message/L5LS7YREIUINO1" target="_blank" rel="noopener noreferrer" className="px-10 py-5 rounded-full border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all text-center uppercase tracking-widest text-sm backdrop-blur-sm">
+                  Encomenda Personalizada
                 </a>
               </div>
             </div>
 
-            {/* 3D STACK COLUMN */}
-            <div className="relative hidden lg:block h-[500px]">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-primary/10 animate-rotate-slow" />
+            {/* 3D FLOATING STACK (Now also on mobile) */}
+            <div className="relative h-[400px] md:h-[600px] w-full order-1 lg:order-2 text-reveal [animation-delay:600ms]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[450px] md:h-[450px] rounded-full border-4 border-primary/5 animate-rotate-slow" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] md:w-[300px] md:h-[300px] rounded-full bg-primary/5 blur-3xl animate-pulse" />
               
-              {/* Floating Images Stacks */}
-              <div className="relative w-full h-full flex items-center justify-center image-3d-stack">
+              <div className="relative w-full h-full flex items-center justify-center image-3d-stack scale-75 md:scale-100">
                 {products?.slice(0, 3).map((p, i) => (
                   <div 
                     key={p.id}
-                    className={`absolute w-64 h-80 rounded-3xl overflow-hidden glass p-3 border-2 border-white/50 shadow-2xl transition-all duration-700 hover:z-50 hover:scale-105 ${
-                      i === 0 ? 'animate-float z-30 rotate-3 -translate-y-10 -translate-x-10' : 
-                      i === 1 ? 'animate-float-slow z-20 -rotate-6 translate-y-10 translate-x-20' : 
-                      'z-10 rotate-12 -translate-y-32 translate-x-32'
+                    className={`absolute w-52 h-64 md:w-72 md:h-88 rounded-[2.5rem] overflow-hidden glass-premium p-3 border-4 border-white shadow-2xl transition-all duration-1000 ${
+                      i === 0 ? 'animate-float z-30 -rotate-3 -translate-y-10 -translate-x-12' : 
+                      i === 1 ? 'animate-float-slow z-20 rotate-6 translate-y-12 translate-x-16' : 
+                      'z-10 -rotate-12 -translate-y-36 translate-x-28 scale-90 opacity-60'
                     }`}
                   >
-                    <img src={p.image_url} alt="" className="w-full h-full object-cover rounded-2xl" />
+                    <img src={p.image_url} alt="" className="w-full h-full object-cover rounded-[2rem]" />
                   </div>
                 ))}
-                
-                {/* Rotating Badge Seal */}
-                <div className="absolute top-0 right-0 z-40 animate-rotate-slow">
-                  <div className="relative w-28 h-28 flex items-center justify-center">
-                    <svg className="w-full h-full" viewBox="0 0 100 100">
-                      <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="transparent" />
-                      <text className="text-[10px] font-bold uppercase tracking-[0.2em] fill-primary/60">
-                        <textPath xlinkHref="#circlePath">Artesanal • Qualidade • Grenda Ateliê •</textPath>
-                      </text>
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Heart className="h-6 w-6 text-primary fill-primary/20" />
-                    </div>
+
+                {/* HEART BADGE FLOATING */}
+                <div className="absolute bottom-[-10%] right-[10%] z-50 animate-bounce">
+                  <div className="w-20 h-20 md:w-32 md:h-32 glass-premium rounded-full flex items-center justify-center rotate-12 shadow-wow">
+                    <Heart className="h-10 w-10 md:h-16 md:h-16 text-primary fill-primary animate-pulse" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Bottom Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+
+        {/* BOTTOM MARQUEE INFINITE */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-primary py-4 z-20 shadow-2xl rotate-[-1deg] translate-y-2">
+          <div className="inline-block animate-marquee whitespace-nowrap text-primary-foreground font-black text-xs md:text-sm uppercase tracking-[0.6em]">
+            EXCLUSIVIDADE • LUXO ACESSÍVEL • ACABAMENTO PREMIUM • FEITO COM AMOR NO ATELIÊ • EXCLUSIVIDADE • LUXO ACESSÍVEL • ACABAMENTO PREMIUM • FEITO COM AMOR NO ATELIÊ • EXCLUSIVIDADE • LUXO ACESSÍVEL • ACABAMENTO PREMIUM • FEITO COM AMOR NO ATELIÊ •
+          </div>
+        </div>
       </section>
 
       {/* Features */}
