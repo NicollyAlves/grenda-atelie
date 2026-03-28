@@ -6,51 +6,73 @@
 
 @layer base {
   :root {
-    /* VOLTANDO PARA PALETA ROSA / ROSE GOLD QUE O USUÁRIO PREFERE */
+    /* PALETA ROSA / ROSE GOLD (PREFERIDA) */
     --background: 0 0% 100%;
     --foreground: 345 40% 15%;
 
     --card: 0 0% 100%;
     --card-foreground: 345 40% 15%;
 
-    --primary: 345 50% 55%; /* Um rosa sofisticado */
+    --primary: 345 50% 55%; 
     --primary-foreground: 0 0% 100%;
 
     --secondary: 345 40% 97%;
     --accent: 30 30% 90%;
 
-    --border: 345 20% 94%;
+    --border: 345 20% 90%;
     --input: 345 20% 94%;
     --ring: 345 50% 55%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
     --font-display: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
   }
-}
 
-@layer base {
+  .dark {
+    --background: 345 20% 6%;
+    --foreground: 345 10% 95%;
+    --card: 345 20% 10%;
+    --card-foreground: 345 10% 95%;
+    --primary: 345 50% 65%;
+    --secondary: 345 20% 12%;
+    --border: 345 20% 15%;
+    --input: 345 20% 15%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     font-family: var(--font-body);
-    /* VOLTANDO O GRADIENTE ROSA DE FUNDO */
-    background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+    background: linear-gradient(135deg, hsl(345 40% 98%) 0%, hsl(0 0% 100%) 100%);
     background-attachment: fixed;
+  }
+
+  /* ESTILO GLOBAL DE INPUTS E SELECTS — PREMIUM */
+  input, select, textarea {
+    @apply bg-background border border-border px-5 py-3 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm font-medium;
+  }
+  
+  select {
+    @apply appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-12;
+  }
+
+  /* BOTÕES E CARDS — RESTAURADOS */
+  .btn-hero {
+    @apply bg-primary text-primary-foreground px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-primary/20;
   }
 }
 
 @layer components {
-  .btn-hero {
-    @apply bg-primary text-primary-foreground px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:scale-95;
-  }
-  
   .card-product {
-    @apply bg-card rounded-2xl overflow-hidden transition-all duration-500 border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-2;
+    @apply bg-card rounded-2xl overflow-hidden transition-all duration-500 border border-border shadow-sm hover:shadow-xl hover:-translate-y-2;
   }
 
   .glass {
-    @apply backdrop-blur-md bg-white/70 border border-white/50 shadow-lg;
+    @apply backdrop-blur-md bg-white/70 border border-white/50 shadow-lg text-foreground;
   }
 
   .image-3d-stack {
@@ -58,6 +80,7 @@
   }
 }
 
+/* ANIMATIONS */
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
