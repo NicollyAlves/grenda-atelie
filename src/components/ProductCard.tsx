@@ -28,15 +28,15 @@ export default function ProductCard({ id, name, price, image_url, category, in_s
           </div>
         )}
       </div>
-      <div className="p-4">
-        {category && <span className="badge-category mb-2 inline-block">{category}</span>}
-        <h3 className="font-display text-lg font-semibold text-foreground mt-1 line-clamp-2">{name}</h3>
-        <div className="flex items-center justify-between mt-3">
-          <span className="text-lg font-bold text-primary">
+      <div className="p-3 md:p-5">
+        {category && <span className="badge-category mb-2 inline-block text-[10px] md:text-xs">{category}</span>}
+        <h3 className="font-display text-sm md:text-lg font-semibold text-foreground line-clamp-2 leading-tight">{name}</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-2 md:mt-4 gap-1">
+          <span className="text-base md:text-xl font-bold text-primary">
             R$ {price.toFixed(2).replace('.', ',')}
           </span>
           {in_stock && typeof stock_quantity === 'number' && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] md:text-xs text-muted-foreground">
               {stock_quantity > 0 ? `${stock_quantity} em estoque` : 'Sob encomenda'}
             </span>
           )}

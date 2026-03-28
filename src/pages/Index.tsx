@@ -21,14 +21,14 @@ export default function Index() {
           <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-primary-foreground/20 blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
         </div>
-        <div className="relative z-10 text-center px-4 animate-fade-in">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary-foreground/20 text-primary-foreground text-xs font-medium tracking-wider uppercase mb-6">
+        <div className="relative z-10 text-center px-4 py-12 md:py-20 animate-fade-in">
+          <span className="inline-block px-3 py-1 rounded-full bg-primary-foreground/20 text-primary-foreground text-[10px] md:text-xs font-medium tracking-wider uppercase mb-4 md:mb-6">
             ✨ Feito à mão com amor
           </span>
-          <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4 font-display leading-tight">
+          <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold text-primary-foreground mb-4 font-display leading-tight">
             Grenda Ateliê
           </h1>
-          <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-lg mx-auto font-body">
+          <p className="text-base md:text-xl text-primary-foreground/90 mb-6 md:mb-10 max-w-lg mx-auto font-body">
             Bolsas, mochilas e necessaires personalizadas, feitas à mão com amor e capricho
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

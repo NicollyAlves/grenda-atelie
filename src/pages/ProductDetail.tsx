@@ -77,11 +77,11 @@ export default function ProductDetail() {
   if (!product) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Produto não encontrado.</div>;
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+    <div className="container mx-auto px-4 py-6 md:py-10 max-w-6xl">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 md:mb-6 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
         {(() => {
           const allImages = [product.image_url, ...((product as any).additional_images || [])].filter(Boolean) as string[];
           return (
@@ -108,10 +108,10 @@ export default function ProductDetail() {
           );
         })()}
         <div>
-          {product.category && <span className="badge-category mb-3 inline-block">{product.category}</span>}
-          <h1 className="font-display text-3xl font-bold text-foreground mb-4">{product.name}</h1>
-          {product.description && <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>}
-          <p className="text-3xl font-bold text-primary mb-2">R$ {product.price.toFixed(2).replace('.', ',')}</p>
+          {product.category && <span className="badge-category mb-3 inline-block shadow-sm">{product.category}</span>}
+          <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-4 leading-tight">{product.name}</h1>
+          {product.description && <p className="text-muted-foreground mb-6 leading-relaxed text-sm md:text-base">{product.description}</p>}
+          <p className="text-3xl md:text-4xl font-bold text-primary mb-2">R$ {product.price.toFixed(2).replace('.', ',')}</p>
 
           {/* Stock info */}
           <div className="flex items-center gap-2 mb-6 text-sm">
@@ -194,7 +194,7 @@ export default function ProductDetail() {
                 </button>
               ))}
             </div>
-            <div className="flex items-start gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
               <input
                 type="text"
                 placeholder="Conte o que achou..."
@@ -206,7 +206,7 @@ export default function ProductDetail() {
               <button 
                 onClick={() => submitReview.mutate()} 
                 disabled={submitReview.isPending || !reviewComment.trim()} 
-                className="btn-hero py-2 px-6"
+                className="btn-hero py-3 px-8 whitespace-nowrap"
               >
                 Enviar
               </button>

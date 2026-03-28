@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -16,6 +17,22 @@ export default function OrderChat({ orderId }: { orderId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!loading) {
+      scrollToBottom();
+    }
+  }, [messages, loading]);
 
   useEffect(() => {
     fetchMessages();
@@ -81,7 +98,10 @@ export default function OrderChat({ orderId }: { orderId: string }) {
         <p className="text-xs text-muted-foreground">Converse com o {isAdmin ? 'Cliente' : 'Ateliê'}</p>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div 
+        ref={scrollRef}
+        className="flex-1 p-4 overflow-y-auto space-y-4 scroll-smooth"
+      >
         {messages.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground mt-10">
             Nenhuma mensagem ainda. Escreva detalhes, dúvidas ou atualizações sobre o seu pedido aqui.

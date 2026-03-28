@@ -63,8 +63,8 @@ export default function MyOrders() {
   if (isLoading) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Carregando...</div>;
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="section-title mb-8">Meus Pedidos</h1>
+    <div className="container mx-auto px-4 py-6 md:py-10">
+      <h1 className="section-title mb-6 md:mb-8 text-2xl md:text-3xl">Meus Pedidos</h1>
       {!orders || orders.length === 0 ? (
         <div className="text-center py-20">
           <Package className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
@@ -73,7 +73,7 @@ export default function MyOrders() {
       ) : (
         <div className="space-y-4">
           {orders.map(order => (
-            <Link key={order.id} to={`/pedido/${order.id}`} className="block card-product p-5 hover:border-primary transition-colors hover:shadow-md">
+            <Link key={order.id} to={`/pedido/${order.id}`} className="block card-product p-4 md:p-6 hover:border-primary/30 transition-all hover:shadow-md">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleDateString('pt-BR')}
@@ -99,7 +99,7 @@ export default function MyOrders() {
                       <p className="text-sm font-medium text-foreground truncate">{item.products?.name}</p>
                       <p className="text-xs text-muted-foreground">Qtd: {item.quantity}</p>
                     </div>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-sm font-semibold text-foreground">
                       R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}
                     </span>
                   </div>

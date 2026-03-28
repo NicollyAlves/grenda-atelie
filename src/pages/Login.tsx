@@ -27,8 +27,19 @@ export default function Login() {
         toast.success('Email de recuperação enviado! Verifique sua caixa de entrada.');
         setMode('login');
       } else if (mode === 'signup') {
-        await signUp(email, password, fullName);
-        toast.success('Conta criada! Verifique seu email para confirmar.');
+        const { data } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+        });
+        
+        if (data?.session) {
+          toast.success('Boas-vindas ao Grenda Ateliê!');
+          navigate('/');
+        } else {
+          toast.success('Conta criada! Verifique seu email para confirmar.');
+          setMode('login');
+        }
       } else {
         await signIn(email, password);
         toast.success('Bem-vinda de volta!');

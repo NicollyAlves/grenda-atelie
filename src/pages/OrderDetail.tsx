@@ -75,14 +75,14 @@ export default function OrderDetail() {
   if (!isAdmin && order.user_id !== user.id) return <Navigate to="/" replace />;
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-5xl">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+    <div className="container mx-auto px-4 py-6 md:py-10 max-w-5xl">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 md:mb-6 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="card-product p-6">
+      <div className="grid lg:grid-cols-5 gap-6 md:gap-8">
+        <div className="lg:col-span-3 space-y-6">
+          <div className="card-product p-4 md:p-6 lg:p-8">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-xl font-semibold mb-1">Pedido #{order.id.slice(0, 8).toUpperCase()}</h1>
@@ -171,7 +171,7 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        <div>
+        <div className="lg:col-span-2">
           <OrderChat orderId={order.id} />
         </div>
       </div>

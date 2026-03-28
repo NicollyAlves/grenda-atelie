@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,52 +6,42 @@
 
 @layer base {
   :root {
-    --background: 30 25% 97%;
+    --background: 30 25% 98%;
     --foreground: 25 30% 12%;
 
-    --card: 30 20% 95%;
+    --card: 0 0% 100%;
     --card-foreground: 25 30% 12%;
 
-    --popover: 30 25% 97%;
+    --popover: 0 0% 100%;
     --popover-foreground: 25 30% 12%;
 
     --primary: 350 45% 55%;
-    --primary-foreground: 30 25% 97%;
+    --primary-foreground: 30 25% 98%;
 
-    --secondary: 30 30% 90%;
+    --secondary: 30 20% 94%;
     --secondary-foreground: 25 30% 20%;
 
-    --muted: 30 15% 92%;
+    --muted: 30 10% 95%;
     --muted-foreground: 25 10% 45%;
 
-    --accent: 25 60% 65%;
+    --accent: 25 50% 65%;
     --accent-foreground: 25 30% 12%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
     --ring: 350 45% 55%;
 
-    --radius: 0.75rem;
+    --radius: 0.8rem;
 
-    --sidebar-background: 30 20% 95%;
-    --sidebar-foreground: 25 30% 20%;
-    --sidebar-primary: 350 45% 55%;
-    --sidebar-primary-foreground: 30 25% 97%;
-    --sidebar-accent: 30 30% 90%;
-    --sidebar-accent-foreground: 25 30% 20%;
-    --sidebar-border: 30 20% 88%;
-    --sidebar-ring: 350 45% 55%;
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
 
-    --font-display: 'Playfair Display', serif;
-    --font-body: 'Lato', sans-serif;
-
-    --gradient-hero: linear-gradient(135deg, hsl(350 45% 55% / 0.9), hsl(25 60% 65% / 0.8));
-    --gradient-warm: linear-gradient(135deg, hsl(30 30% 90%), hsl(30 25% 97%));
-    --shadow-soft: 0 4px 20px -4px hsl(25 30% 12% / 0.08);
-    --shadow-card: 0 8px 30px -8px hsl(25 30% 12% / 0.12);
+    --shadow-soft: 0 2px 10px -2px hsl(25 30% 12% / 0.05);
+    --shadow-md: 0 10px 25px -5px hsl(25 30% 12% / 0.08);
+    --shadow-lg: 0 20px 40px -10px hsl(25 30% 12% / 0.12);
   }
 
   .dark {
@@ -74,14 +64,6 @@
     --border: 25 12% 20%;
     --input: 25 12% 20%;
     --ring: 350 45% 60%;
-    --sidebar-background: 25 18% 10%;
-    --sidebar-foreground: 30 15% 92%;
-    --sidebar-primary: 350 45% 60%;
-    --sidebar-primary-foreground: 25 20% 8%;
-    --sidebar-accent: 25 12% 18%;
-    --sidebar-accent-foreground: 30 15% 92%;
-    --sidebar-border: 25 12% 20%;
-    --sidebar-ring: 350 45% 60%;
   }
 }
 
@@ -90,39 +72,53 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     font-family: var(--font-body);
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    @apply tracking-tight font-semibold;
   }
 }
 
 @layer components {
   .btn-hero {
-    @apply bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium tracking-wide transition-all duration-300;
+    @apply bg-primary text-primary-foreground px-8 py-3 rounded-full font-medium transition-all duration-300 active:scale-95;
     box-shadow: var(--shadow-soft);
   }
   .btn-hero:hover {
-    @apply opacity-90 scale-105;
-    box-shadow: var(--shadow-card);
+    @apply opacity-90 shadow-md transform -translate-y-0.5;
   }
+  
   .card-product {
-    @apply bg-card rounded-xl overflow-hidden transition-all duration-300;
+    @apply bg-card rounded-2xl overflow-hidden transition-all duration-500 border border-transparent;
     box-shadow: var(--shadow-soft);
   }
   .card-product:hover {
-    box-shadow: var(--shadow-card);
-    @apply -translate-y-1;
+    @apply border-primary/10 -translate-y-1.5;
+    box-shadow: var(--shadow-md);
   }
+
   .section-title {
-    @apply text-3xl md:text-4xl font-bold text-foreground tracking-tight;
+    @apply text-3xl md:text-5xl font-bold text-foreground mb-4;
     font-family: var(--font-display);
   }
-  .badge-category {
-    @apply px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground;
-  }
+
   .input-styled {
-    @apply w-full px-4 py-3 rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all;
+    @apply w-full px-5 py-3.5 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all duration-300;
   }
+  
+  .glass {
+    @apply bg-background/70 backdrop-blur-lg border border-white/20;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }

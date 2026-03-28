@@ -31,8 +31,8 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-4 flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 glass border-b border-border/50">
+      <div className="container mx-auto px-4 flex items-center justify-between h-20">
         <Link to="/" className="flex items-center gap-2">
           <ShoppingBag className="h-6 w-6 text-primary" />
           <span className="font-display text-xl font-bold text-foreground">Grenda Ateliê</span>
@@ -80,18 +80,18 @@ export default function Header() {
 
       {/* Mobile nav */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3">
-          <Link to="/" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Início</Link>
-          <Link to="/produtos" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Produtos</Link>
+        <div className="md:hidden glass border-t border-border/50 px-6 py-8 space-y-6 animate-in slide-in-from-top duration-300">
+          <Link to="/" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Início</Link>
+          <Link to="/produtos" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Produtos</Link>
           {user ? (
             <>
-              <Link to="/meus-pedidos" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Meus Pedidos</Link>
-              <Link to="/minha-conta" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minha Conta</Link>
-              {isAdmin && <Link to="/admin" className="block text-sm font-medium text-primary" onClick={() => setMenuOpen(false)}>Admin</Link>}
-              <button onClick={() => { handleSignOut(); setMenuOpen(false); }} className="block text-sm font-medium text-muted-foreground">Sair</button>
+              <Link to="/meus-pedidos" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Meus Pedidos</Link>
+              <Link to="/minha-conta" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minha Conta</Link>
+              {isAdmin && <Link to="/admin" className="block text-lg font-medium text-primary" onClick={() => setMenuOpen(false)}>Painel Admin</Link>}
+              <button onClick={() => { handleSignOut(); setMenuOpen(false); }} className="block text-lg font-medium text-destructive mt-4">Sair da Conta</button>
             </>
           ) : (
-            <Link to="/login" className="block btn-hero text-sm text-center" onClick={() => setMenuOpen(false)}>Entrar</Link>
+            <Link to="/login" className="block btn-hero text-base text-center" onClick={() => setMenuOpen(false)}>Acessar Minha Conta</Link>
           )}
         </div>
       )}
