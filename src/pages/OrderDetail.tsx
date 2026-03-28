@@ -28,9 +28,14 @@ export default function OrderDetail() {
         .maybeSingle();
         
       if (error) {
-        console.error('Error fetching order from supabase:', error);
-        toast.error('Ocorreu um erro ao carregar o pedido.');
+        console.error('ERROR DETAILED from supabase OrderDetail:', error);
+        toast.error('Ocorreu um erro ao carregar o pedido. Verifique o console.');
         throw error;
+      }
+      
+      if (!orderData) {
+        console.warn('Order not found or no access for ID:', id);
+        return null;
       }
       
       if (orderData) {

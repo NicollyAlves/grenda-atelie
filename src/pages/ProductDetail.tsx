@@ -168,12 +168,14 @@ export default function ProductDetail() {
           
           return (
             <div className="space-y-3">
-              <div className="aspect-square rounded-xl overflow-hidden bg-muted relative group">
-                <img 
-                  src={allImages[selectedImg]?.url || product.image_url} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                />
+              <div className="flex-1 w-full max-w-full">
+                <div className="relative rounded-2xl overflow-hidden bg-muted group shadow-lg border border-border/50 h-[50vh] sm:h-[60vh] md:aspect-square md:h-auto">
+                  <img 
+                    src={allImages[selectedImg]?.url || product.image_url} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105" 
+                  />
+                </div>
               </div>
               {allImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">

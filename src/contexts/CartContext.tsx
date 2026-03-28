@@ -61,6 +61,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     
     if (!error && data) {
       setItems(data);
+    } else if (error) {
+      console.error('Error loading DB cart:', error);
     }
   };
 
@@ -75,6 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (user) {
+      console.log('Adding item to DB cart:', newItem);
       const { data, error } = await supabase
         .from('cart_items')
         .insert({
@@ -87,14 +90,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .single();
       
       if (!error && data) {
-        setItems([...items, data]);
+        setItems(prev => [...prev, data]);
+        toast.success('Adicionado ao carrinho!');
       } else {
-        toast.error('Erro ao adicionar ao carrinho');
+        console.error('Error adding to DB cart:', error);
+        toast.error('Erro ao adicionar ao carrinho no banco');
       }
     } else {
-      setItems([...items, newItem]);
+      console.log('Adding item to guest cart:', newItem);
+      // Ensure we have the full product/variant info forguest cart too
+      setItems(prev => [...prev, newItem]);
+      toast.success('Adicionado ao carrinho (Visitante)!');
     }
-    toast.success('Adicionado ao carrinho!');
   };
 
   const removeItem = async (productId: string, variantId?: string) => {
