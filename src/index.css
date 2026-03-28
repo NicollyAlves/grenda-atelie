@@ -60,7 +60,7 @@
 
   /* Estilo Global de Inputs e Selects — Premium Salmão */
   input, select, textarea {
-    @apply bg-background border border-border px-5 py-3 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm font-medium;
+    @apply w-full bg-background border border-border px-5 py-3 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm font-medium;
   }
   
   select {
