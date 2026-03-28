@@ -19,7 +19,16 @@ export default function Checkout() {
     notes?: string;
   } | null;
   
-  const [cep, setCep] = useState('');
+  const [orderType, setOrderType] = useState<'entrega' | 'retirada'>('entrega');
+  const [address, setAddress] = useState({
+    cep: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: 'Manaus',
+    state: 'AM'
+  });
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | 'dinheiro'>('pix');
@@ -57,86 +66,69 @@ export default function Checkout() {
     return R * c; // Distância em KM
   };
 
-  const calculateShipping = async () => {
-    if (cep.length < 8) {
-      toast.error('Digite um CEP válido.');
-      return;
-    }
+  const handleCepBlur = async () => {
+    const cepClean = address.cep.replace(/\D/g, '');
+    if (cepClean.length !== 8) return;
     
     setCalculating(true);
     try {
-      // 1. Busca os dados de endereço do CEP via ViaCEP
-      const cepClean = cep.replace(/\D/g, '');
       const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
       const data = await res.json();
       
       if (data.erro) {
          toast.error('CEP não encontrado.');
-         setShippingFee(null);
          return;
       }
 
-      // Regra de fallback para entregas fora de Manaus e do Amazonas:
+      setAddress(prev => ({
+        ...prev,
+        street: data.logradouro || '',
+        neighborhood: data.bairro || '',
+        city: data.localidade || 'Manaus',
+        state: data.uf || 'AM'
+      }));
+
+      // Base calculation logic (keeping our simplified version for now)
       if (data.uf !== 'AM') {
-        setShippingFee(45.00); // Taxa fixa p/ outros estados (ex: Correios)
-        toast.success(`Frete fixo para fora do estado (${data.uf})`);
-        return;
-      }
-      
-      if (data.localidade !== 'Manaus') {
-        setShippingFee(25.00); // Taxa fixa interior do Amazonas
-        toast.success(`Frete fixo para Interior do AM (${data.localidade})`);
-        return;
-      }
-
-      // 2. Tenta pegar a lat/lon exata usando Nominatim (OpenStreetMap)
-      // Usamos a rua e o bairro para ter maior precisão, caso falhe tentamos só bairro
-      const query = encodeURIComponent(`${data.logradouro}, ${data.bairro}, Manaus, Amazonas, Brasil`);
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-      let geoData = await geoRes.json();
-
-      // Fallback geográfico se a rua for muito nova/desconhecida: procura pelo bairro
-      if (!geoData || geoData.length === 0) {
-        const fallbackQuery = encodeURIComponent(`${data.bairro}, Manaus, Amazonas, Brasil`);
-        const fallbackRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fallbackQuery}&limit=1`);
-        geoData = await fallbackRes.json();
-      }
-
-      // Coordenadas de origem do Ateliê: Rua São Pedro, 75, Compensa, Manaus
-      const ORIGIN_LAT = -3.1118;
-      const ORIGIN_LON = -60.0381;
-
-      if (geoData && geoData.length > 0) {
-        const destLat = parseFloat(geoData[0].lat);
-        const destLon = parseFloat(geoData[0].lon);
-        
-        const distanceKm = calculateDistance(ORIGIN_LAT, ORIGIN_LON, destLat, destLon);
-        
-        // Simulação do Uber Moto: R$ 4.00 base + R$ 1.50 por Km + margem pequena(1km)
-        // Linha reta tende a ser menor que o trajeto real, então multiplicamos a distância por um fator (ex: 1.3 p/ ruas)
-        const realDistanceEstimate = distanceKm * 1.3; 
-        const motoFee = 4.00 + (realDistanceEstimate * 1.50);
-        
-        setShippingFee(Number(motoFee.toFixed(2)));
-        toast.success(`Frete Uber Moto calculado! (~${realDistanceEstimate.toFixed(1)} km)`);
+        setShippingFee(45.00);
+      } else if (data.localidade !== 'Manaus') {
+        setShippingFee(25.00);
       } else {
-         // Último caso de "falha" - Endereço não mapeado no AM, usa base fixa local
-         setShippingFee(15.00);
-         toast.info('Frete local padrão aplicado (Endereço não geolocalizado exato)');
+        setShippingFee(15.00); // Standard local fee
       }
-
+      toast.success('Endereço e frete localizados!');
     } catch (error) {
-      toast.error('Erro ao calcular frete com GPS. Usando taxa base.');
-      setShippingFee(15.00);
+       toast.error('Erro ao buscar CEP.');
     } finally {
       setCalculating(false);
     }
   };
 
+  const handleOrderTypeChange = (type: 'entrega' | 'retirada') => {
+    setOrderType(type);
+    if (type === 'retirada') {
+      setShippingFee(0);
+      if (paymentMethod === 'dinheiro') {
+         // Keep it
+      }
+    } else {
+      if (paymentMethod === 'dinheiro') {
+        setPaymentMethod('pix'); // Reset invalid delivery payment
+      }
+    }
+    setPaymentSimulated(false); // Reset payment simulation on type change
+  };
+
   const handleSimulatePayment = () => {
-    if (shippingFee === null && paymentMethod !== 'dinheiro') {
-      toast.error('Calcule o frete antes de prosseguir.');
-      return;
+    if (orderType === 'entrega') {
+      if (!address.street || !address.number || !address.neighborhood || !address.cep) {
+        toast.error('Preencha seu endereço completo para entrega.');
+        return;
+      }
+      if (shippingFee === null) {
+        toast.error('Aguarde o cálculo do frete.');
+        return;
+      }
     }
 
     if (paymentMethod === 'cartao') {
@@ -184,10 +176,19 @@ export default function Checkout() {
       const finalStatus = paymentMethod === 'dinheiro' ? 'aguardando_pagamento' : 'pendente';
       const finalPaymentStatus = paymentMethod === 'dinheiro' ? 'pendente' : 'pago';
 
+      // Format address for notes if it's a delivery
+      let finalNotes = state?.notes || '';
+      if (orderType === 'entrega') {
+        const addressStr = `\n-- ENDEREÇO DE ENTREGA --\n${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}\n${address.neighborhood}\n${address.city} - ${address.state}\nCEP: ${address.cep}`;
+        finalNotes += addressStr;
+      } else {
+        finalNotes += `\n-- RETIRADA NO LOCAL --`;
+      }
+
       const { data: order, error: orderErr } = await supabase.from('orders').insert({
         user_id: user.id, 
         total, 
-        notes: state.notes || null,
+        notes: finalNotes.trim() || null,
         status: finalStatus,
         payment_method: paymentMethod,
         payment_status: finalPaymentStatus,
@@ -230,27 +231,99 @@ export default function Checkout() {
         {/* Lado Esquerdo: Identificação e Frete */}
         <div className="space-y-8">
           
-          <div className="card-product p-6 space-y-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Truck className="h-5 w-5 text-primary" /> Entrega
-            </h2>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Informe seu CEP" 
-                value={cep} 
-                onChange={e => setCep(e.target.value)}
-                maxLength={9}
-                className="input-styled flex-1"
-              />
-              <button onClick={calculateShipping} disabled={calculating} className="btn-hero px-6">
-                Calcular
-              </button>
+          <div className="card-product p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Como deseja receber?</h2>
+              <div className="flex p-1 bg-muted rounded-xl gap-1">
+                <button 
+                  onClick={() => handleOrderTypeChange('entrega')}
+                  className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${orderType === 'entrega' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Truck className="h-4 w-4" /> Entrega
+                </button>
+                <button 
+                  onClick={() => handleOrderTypeChange('retirada')}
+                  className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${orderType === 'retirada' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Banknote className="h-4 w-4" /> Retirada no Local
+                </button>
+              </div>
             </div>
-            {shippingFee !== null && (
-              <p className="text-sm text-green-600 font-medium">
-                Frete fixado: R$ {shippingFee.toFixed(2).replace('.', ',')}
-              </p>
+
+            {orderType === 'entrega' ? (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground border-b pb-2">Endereço de Entrega</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-[10px] font-bold uppercase ml-1">CEP</label>
+                    <input 
+                      type="text" 
+                      placeholder="00000-000" 
+                      value={address.cep} 
+                      onChange={e => setAddress({...address, cep: e.target.value})}
+                      onBlur={handleCepBlur}
+                      maxLength={9}
+                      className="input-styled"
+                    />
+                  </div>
+                  <div className="col-span-1 flex items-end">
+                    {calculating && <p className="text-[10px] text-primary animate-pulse py-3">Buscando CEP...</p>}
+                  </div>
+                  
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-[10px] font-bold uppercase ml-1">Rua / Logradouro</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Rua São Pedro" 
+                      value={address.street} 
+                      onChange={e => setAddress({...address, street: e.target.value})}
+                      className="input-styled"
+                    />
+                  </div>
+
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-[10px] font-bold uppercase ml-1">Número</label>
+                    <input 
+                      type="text" 
+                      placeholder="123" 
+                      value={address.number} 
+                      onChange={e => setAddress({...address, number: e.target.value})}
+                      className="input-styled"
+                    />
+                  </div>
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Complemento</label>
+                    <input 
+                      type="text" 
+                      placeholder="Apt, Sala, etc." 
+                      value={address.complement} 
+                      onChange={e => setAddress({...address, complement: e.target.value})}
+                      className="input-styled"
+                    />
+                  </div>
+
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-[10px] font-bold uppercase ml-1">Bairro</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Compensa" 
+                      value={address.neighborhood} 
+                      onChange={e => setAddress({...address, neighborhood: e.target.value})}
+                      className="input-styled"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in duration-300">
+                <p className="text-sm font-medium text-primary flex items-center gap-2">
+                   📍 Ponto de Retirada
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                   Rua São Pedro, 75, Compensa - Manaus/AM.<br/>
+                   Horário: Segunda a Sábado, 09h às 18h.
+                </p>
+              </div>
             )}
           </div>
 
@@ -269,11 +342,23 @@ export default function Checkout() {
                 <span className="font-medium">Cartão de Crédito</span>
               </label>
               
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === 'dinheiro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                <input type="radio" value="dinheiro" checked={paymentMethod === 'dinheiro'} onChange={() => { setPaymentMethod('dinheiro'); setShippingFee(0); setCep(''); }} className="accent-primary" />
-                <Banknote className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">Dinheiro (Retirada Pessoalmente)</span>
-              </label>
+              {orderType === 'retirada' && (
+                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all animate-in zoom-in duration-300 ${paymentMethod === 'dinheiro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <input type="radio" value="dinheiro" checked={paymentMethod === 'dinheiro'} onChange={() => { setPaymentMethod('dinheiro'); }} className="accent-primary" />
+                  <Banknote className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <span className="font-medium">Dinheiro</span>
+                    <p className="text-[10px] text-muted-foreground">Pagamento na retirada</p>
+                  </div>
+                </label>
+              )}
+
+              {orderType === 'entrega' && (
+                <div className="p-3 bg-muted/30 rounded-lg border border-dashed border-border flex items-center gap-2 opacity-60">
+                   <Banknote className="h-4 w-4 text-muted-foreground" />
+                   <p className="text-[10px] text-muted-foreground font-medium italic">Dinheiro não disponível para entrega em domicílio.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
