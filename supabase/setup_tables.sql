@@ -98,3 +98,13 @@ BEGIN
   EXCEPTION WHEN duplicate_object THEN NULL;
   END;
 END $$;
+
+-- 10. POLÍTICAS DE PERFIS (Exibir nomes de outros usuários)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can view profile names" ON public.profiles;
+CREATE POLICY "Anyone can view profile names" ON public.profiles FOR SELECT 
+  USING (true);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE
+  USING (auth.uid() = user_id);

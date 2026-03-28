@@ -6,22 +6,22 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE — ROSA DELICADO E BRANCO */
-    --background: 345 30% 99%;
-    --foreground: 30 40% 12%; /* Marrom Café Profundo para Texto */
+    /* LIGHT MODE — SALMÃO & BRANCO (SEM ROSA) */
+    --background: 0 0% 100%;
+    --foreground: 30 40% 12%; 
 
     --card: 0 0% 100%;
     --card-foreground: 30 40% 12%;
 
-    --primary: 345 55% 60%; /* Rosa Seco Delicado */
+    --primary: 15 75% 65%; /* Salmão Vibrante */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 345 30% 97%;
-    --accent: 30 30% 95%;
+    --secondary: 25 30% 98%;
+    --accent: 25 30% 96%;
 
-    --border: 345 15% 92%;
-    --input: 345 15% 94%;
-    --ring: 345 55% 60%;
+    --border: 15 30% 91%;
+    --input: 15 30% 94%;
+    --ring: 15 75% 65%;
 
     --radius: 0.75rem;
 
@@ -30,22 +30,22 @@
   }
 
   .dark {
-    /* DARK MODE — MARROM CAFÉ E CREME (CONFORME INIÍCIO DO PROJETO) */
-    --background: 25 35% 7%; /* Marrom Escuro Chocolate */
-    --foreground: 35 40% 95%; /* Creme Champagne */
+    /* DARK MODE — CHOCOLATE & SALMÃO (SEM CINZA) */
+    --background: 25 40% 4%; /* Chocolate Quase Preto */
+    --foreground: 30 40% 96%; /* Creme Champagne */
     
-    --card: 25 30% 10%; /* Marrom Tabaco */
-    --card-foreground: 35 40% 95%;
+    --card: 25 35% 8%; /* Marrom Café */
+    --card-foreground: 30 40% 96%;
     
-    --primary: 20 45% 60%; /* Rose Gold / Cobre Quente */
-    --primary-foreground: 25 35% 7%;
+    --primary: 15 75% 65%; /* Salmão */
+    --primary-foreground: 25 40% 4%;
     
-    --secondary: 25 25% 15%;
-    --accent: 25 25% 12%;
+    --secondary: 25 30% 12%; 
+    --accent: 25 30% 10%;
     
-    --border: 25 20% 18%;
-    --input: 25 20% 18%;
-    --ring: 20 45% 60%;
+    --border: 25 30% 15%; /* Marrom Profundo */
+    --input: 25 30% 15%;
+    --ring: 15 75% 65%;
   }
 
   * {
@@ -58,17 +58,7 @@
     background-image: none !important;
   }
 
-  /* Aplica o degradê rosa APENAS se o tema escuro não estiver ativo */
-  html:not(.dark) body {
-    background-image: linear-gradient(135deg, hsl(345 50% 98%) 0%, #ffffff 100%) !important;
-    background-attachment: fixed !important;
-  }
-
-  html.dark body {
-    background-color: hsl(var(--background)) !important;
-  }
-
-  /* ESTILO GLOBAL DE INPUTS E SELECTS — REFINADO */
+  /* Estilo Global de Inputs e Selects — Premium Salmão */
   input, select, textarea {
     @apply bg-background border border-border px-5 py-3 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm font-medium;
   }
@@ -87,6 +77,11 @@
     @apply bg-card rounded-2xl overflow-hidden transition-all duration-500 border border-border shadow-sm hover:shadow-xl hover:-translate-y-2;
   }
 
+  /* Borda salmão fina apenas no Modo Escuro para destacar do fundo chocolate */
+  .dark .card-product {
+    @apply border-primary/40;
+  }
+
   .glass {
     @apply backdrop-blur-md bg-card/60 border border-border shadow-lg text-foreground;
   }
@@ -96,7 +91,7 @@
   }
 }
 
-/* ANIMATIONS */
+/* Animations */
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }

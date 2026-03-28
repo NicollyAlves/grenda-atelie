@@ -15,9 +15,9 @@ export default function ProductCard({ id, name, price, image_url, category, in_s
   return (
     <Link 
       to={`/produto/${id}`} 
-      className="group card-product block h-full bg-white transition-all duration-300"
+      className="group card-product block h-full transition-all duration-300"
     >
-      <div className="relative aspect-square overflow-hidden bg-rose-50/10">
+      <div className="relative aspect-square overflow-hidden bg-primary/5">
         {image_url ? (
           <img
             src={image_url}
@@ -32,8 +32,8 @@ export default function ProductCard({ id, name, price, image_url, category, in_s
         )}
         
         {!in_stock && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-            <span className="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
               Esgotado
             </span>
           </div>
@@ -41,7 +41,7 @@ export default function ProductCard({ id, name, price, image_url, category, in_s
         
         {category && (
           <div className="absolute top-3 left-3">
-            <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest text-primary shadow-sm">
+            <span className="glass px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest text-primary shadow-sm">
               {category}
             </span>
           </div>
