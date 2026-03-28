@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import CartDrawer from './CartDrawer';
 
 export default function Header() {
   const { user, isAdmin, signOut } = useAuth();
@@ -62,6 +63,9 @@ export default function Header() {
               <User className="h-4 w-4 inline mr-1" /> Entrar
             </Link>
           )}
+          
+          <CartDrawer />
+
           <button onClick={() => setDark(!dark)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" aria-label="Alternar tema">
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
@@ -72,6 +76,7 @@ export default function Header() {
           <button onClick={() => setDark(!dark)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground" aria-label="Alternar tema">
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
+          <CartDrawer />
           <button className="text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>

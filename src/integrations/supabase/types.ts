@@ -19,6 +19,7 @@ export type Database = {
           id: string
           order_id: string
           product_id: string
+          variant_id: string | null
           quantity: number
           unit_price: number
         }
@@ -51,6 +52,62 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_items: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          variant_id: string | null
+          quantity: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          variant_id?: string | null
+          quantity?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
+          variant_id?: string | null
+          quantity?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          }
         ]
       }
       orders: {
@@ -124,6 +181,80 @@ export type Database = {
           }
         ]
       }
+      product_variants: {
+        Row: {
+          id: string
+          product_id: string
+          image_url: string
+          stock_quantity: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          image_url: string
+          stock_quantity?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          image_url?: string
+          stock_quantity?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      product_inquiries: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          message: string
+          is_from_admin: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          message: string
+          is_from_admin?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
+          message?: string
+          is_from_admin?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_inquiries_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_inquiries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
       products: {
         Row: {
           additional_images: string[] | null
@@ -137,6 +268,7 @@ export type Database = {
           price: number
           stock_quantity: number
           updated_at: string
+          has_variants: boolean
         }
         Insert: {
           additional_images?: string[] | null

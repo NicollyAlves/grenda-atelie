@@ -32,7 +32,7 @@ export default function Index() {
             Bolsas, mochilas e necessaires personalizadas, feitas à mão com amor e capricho
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/produtos" className="btn-hero inline-flex items-center gap-2 bg-primary-foreground text-foreground hover:bg-primary-foreground/90">
+            <Link to="/produtos" className="btn-hero inline-flex items-center gap-2 bg-primary-foreground text-zinc-950 font-bold hover:bg-primary-foreground/90">
               Ver Produtos <ArrowRight className="h-4 w-4" />
             </Link>
             <a href="https://wa.me/message/L5LS7YREIUINO1" target="_blank" rel="noopener noreferrer" className="btn-hero inline-flex items-center gap-2 bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">

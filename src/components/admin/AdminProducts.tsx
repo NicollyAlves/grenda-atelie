@@ -13,9 +13,22 @@ interface ProductForm {
   additional_images: string[];
   in_stock: boolean;
   stock_quantity: string;
+  has_variants: boolean;
+  variants: { id?: string; image_url: string; stock_quantity: string }[];
 }
 
-const emptyForm: ProductForm = { name: '', description: '', price: '', category: '', image_url: '', additional_images: [], in_stock: true, stock_quantity: '0' };
+const emptyForm: ProductForm = { 
+  name: '', 
+  description: '', 
+  price: '', 
+  category: '', 
+  image_url: '', 
+  additional_images: [], 
+  in_stock: true, 
+  stock_quantity: '0',
+  has_variants: false,
+  variants: []
+};
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
@@ -43,13 +56,35 @@ export default function AdminProducts() {
         additional_images: form.additional_images,
         in_stock: form.in_stock,
         stock_quantity: parseInt(form.stock_quantity) || 0,
+        has_variants: form.has_variants,
       };
+      
+      let productId = editId;
       if (editId) {
         const { error } = await supabase.from('products').update(payload).eq('id', editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('products').insert(payload);
+        const { data, error } = await supabase.from('products').insert(payload).select('id').single();
         if (error) throw error;
+        productId = data.id;
+      }
+
+      // Handle variants
+      if (form.has_variants && productId) {
+        // Simple strategy: delete old and insert new, or update. 
+        // For simplicity in this implementation, we'll sync them.
+        const { error: delError } = await supabase.from('product_variants').delete().eq('product_id', productId);
+        if (delError) throw delError;
+
+        if (form.variants.length > 0) {
+          const variantsToInsert = form.variants.map(v => ({
+            product_id: productId!,
+            image_url: v.image_url,
+            stock_quantity: parseInt(v.stock_quantity) || 0
+          }));
+          const { error: insError } = await supabase.from('product_variants').insert(variantsToInsert);
+          if (insError) throw insError;
+        }
       }
     },
     onSuccess: () => {
@@ -95,7 +130,14 @@ export default function AdminProducts() {
     setUploading(false);
   };
 
-  const openEdit = (p: any) => {
+  const openEdit = async (p: any) => {
+    // Fetch variants if they exist
+    let pVariants: any[] = [];
+    if (p.has_variants) {
+      const { data } = await supabase.from('product_variants').select('*').eq('product_id', p.id);
+      pVariants = data || [];
+    }
+
     setForm({
       name: p.name,
       description: p.description || '',
@@ -105,6 +147,8 @@ export default function AdminProducts() {
       additional_images: p.additional_images || [],
       in_stock: p.in_stock,
       stock_quantity: String(p.stock_quantity ?? 0),
+      has_variants: p.has_variants || false,
+      variants: pVariants.map(v => ({ id: v.id, image_url: v.image_url, stock_quantity: String(v.stock_quantity) }))
     });
     setEditId(p.id);
     setShowForm(true);
@@ -129,42 +173,124 @@ export default function AdminProducts() {
             <div className="space-y-3">
               <input placeholder="Nome *" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input-styled" required />
               <textarea placeholder="Descrição" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-styled h-20 resize-none" />
+              
               <div className="grid grid-cols-2 gap-3">
                 <input placeholder="Preço (ex: 89.90) *" type="number" step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="input-styled" required />
-                <input placeholder="Qtd. estoque" type="number" min="0" value={form.stock_quantity} onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))} className="input-styled" />
+                <input placeholder="Categoria" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="input-styled" />
               </div>
-              <input placeholder="Categoria (ex: Bolsa, Mochila)" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="input-styled" />
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Imagem principal</label>
-                <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true)} className="text-sm text-muted-foreground" />
-                {form.image_url && (
-                  <div className="relative mt-2 inline-block">
-                    <img src={form.image_url} alt="Preview" className="w-24 h-24 rounded-lg object-cover" />
-                    <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Imagens adicionais</label>
-                <input type="file" accept="image/*" multiple onChange={e => handleImageUpload(e, false)} className="text-sm text-muted-foreground" />
-                {form.additional_images.length > 0 && (
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    {form.additional_images.map((url, i) => (
-                      <div key={i} className="relative inline-block">
-                        <img src={url} alt={`Extra ${i+1}`} className="w-20 h-20 rounded-lg object-cover" />
-                        <button type="button" onClick={() => setForm(f => ({ ...f, additional_images: f.additional_images.filter((_, j) => j !== i) }))} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+
+              <div className="bg-secondary/20 p-4 rounded-lg space-y-3 border border-border/50">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={form.has_variants} 
+                    onChange={e => setForm(f => ({ ...f, has_variants: e.target.checked }))} 
+                    className="rounded text-primary focus:ring-primary h-4 w-4" 
+                  />
+                  <span>Este produto possui variações (ex: cores diferentes)</span>
+                </label>
+                
+                {form.has_variants ? (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Variantes por Imagem</p>
+                    <div className="grid gap-2">
+                      {form.variants.map((v, i) => (
+                        <div key={i} className="flex items-center gap-3 bg-background p-2 rounded-md border border-border/50 shadow-sm animate-in fade-in">
+                          <img src={v.image_url} className="w-10 h-10 object-cover rounded" />
+                          <div className="flex-1">
+                            <input 
+                              type="number" 
+                              placeholder="Estoque" 
+                              value={v.stock_quantity} 
+                              onChange={e => {
+                                const newVariants = [...form.variants];
+                                newVariants[i].stock_quantity = e.target.value;
+                                setForm(f => ({ ...f, variants: newVariants }));
+                              }}
+                              className="input-styled py-1 px-2 text-xs h-8 bg-muted/30"
+                            />
+                          </div>
+                          <button 
+                            onClick={() => setForm(f => ({ ...f, variants: f.variants.filter((_, j) => j !== i) }))}
+                            className="text-muted-foreground hover:text-destructive p-1 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="pt-2">
+                        <label className="text-[10px] text-muted-foreground mb-1 block">Adicionar variante via imagem</label>
+                        <div className="flex items-center justify-center border-2 border-dashed border-border/50 rounded-lg p-4 hover:border-primary/30 transition-colors bg-background/50 relative overflow-hidden">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            multiple 
+                            onChange={async (e) => {
+                              const files = e.target.files;
+                              if (!files) return;
+                              setUploading(true);
+                              for (const file of Array.from(files)) {
+                                const ext = file.name.split('.').pop();
+                                const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                                const { error } = await supabase.storage.from('product-images').upload(path, file);
+                                if (error) { toast.error('Erro no upload'); continue; }
+                                const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+                                setForm(f => ({ 
+                                  ...f, 
+                                  variants: [...f.variants, { image_url: urlData.publicUrl, stock_quantity: '0' }] 
+                                }));
+                              }
+                              setUploading(false);
+                            }} 
+                            className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                          />
+                          <div className="text-center">
+                            <Plus className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+                            <p className="text-[10px] text-muted-foreground">Clique ou arraste imagens</p>
+                          </div>
+                        </div>
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-muted-foreground">Estoque Geral</label>
+                      <input 
+                        placeholder="Qtd. estoque" 
+                        type="number" 
+                        min="0" 
+                        value={form.stock_quantity} 
+                        onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))} 
+                        className="input-styled py-1.5 h-auto text-sm" 
+                      />
+                    </div>
+                    <div className="flex items-end pb-3">
+                      <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                        <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))} className="rounded" />
+                        <span>Em estoque</span>
+                      </label>
+                    </div>
                   </div>
                 )}
-                {uploading && <p className="text-xs text-muted-foreground mt-1">Enviando...</p>}
               </div>
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))} className="rounded" />
-                Em estoque
-              </label>
-              <button onClick={() => saveMutation.mutate()} disabled={!form.name || !form.price || saveMutation.isPending} className="btn-hero w-full">
-                {saveMutation.isPending ? 'Salvando...' : 'Salvar'}
+
+              {!form.has_variants && (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-foreground block">Imagem Principal (Obrigatória se sem variantes)</label>
+                  <div className="flex items-center gap-4">
+                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true)} className="text-xs text-muted-foreground" />
+                    {form.image_url && <img src={form.image_url} className="w-12 h-12 rounded object-cover border" />}
+                  </div>
+                </div>
+              )}
+
+              <button 
+                onClick={() => saveMutation.mutate()} 
+                disabled={!form.name || !form.price || saveMutation.isPending || uploading} 
+                className="btn-hero w-full mt-4 flex items-center justify-center gap-2"
+              >
+                {saveMutation.isPending || uploading ? 'Aguarde...' : 'Salvar Produto'}
               </button>
             </div>
           </div>

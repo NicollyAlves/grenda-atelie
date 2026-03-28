@@ -10,7 +10,12 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const state = location.state as { product: any; quantity: number; notes: string } | null;
+  const state = location.state as { 
+    items?: { product: any; variant?: any; quantity: number; notes: string }[];
+    product?: any; 
+    quantity?: number; 
+    notes?: string;
+  } | null;
   
   const [cep, setCep] = useState('');
   const [shippingFee, setShippingFee] = useState<number | null>(null);
@@ -20,10 +25,16 @@ export default function Checkout() {
   const [paymentSimulated, setPaymentSimulated] = useState(false);
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!state || !state.product) return <Navigate to="/" replace />;
+  if (!state || (!state.items && !state.product)) return <Navigate to="/" replace />;
   
-  const { product, quantity, notes } = state;
-  const productTotal = product.price * quantity;
+  const checkoutItems = state.items || (state.product ? [{ 
+    product: state.product, 
+    quantity: state.quantity || 1, 
+    notes: state.notes || '',
+    variant: (state as any).variant 
+  }] : []);
+
+  const productTotal = checkoutItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const total = productTotal + (shippingFee || 0);
 
   // Calcula a distância usando a fórmula de Haversine (linha reta)
@@ -138,7 +149,7 @@ export default function Checkout() {
       const { data: order, error: orderErr } = await supabase.from('orders').insert({
         user_id: user.id, 
         total, 
-        notes: notes || null,
+        notes: state.notes || null,
         status: finalStatus,
         payment_method: paymentMethod,
         payment_status: finalPaymentStatus,
@@ -147,12 +158,15 @@ export default function Checkout() {
       
       if (orderErr) throw orderErr;
 
-      const { error: itemErr } = await supabase.from('order_items').insert({
-        order_id: order.id, 
-        product_id: product.id, 
-        quantity, 
-        unit_price: product.price,
-      });
+      const orderItems = checkoutItems.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        variant_id: item.variant?.id || null,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+      }));
+
+      const { error: itemErr } = await supabase.from('order_items').insert(orderItems);
       if (itemErr) throw itemErr;
 
       toast.success('Pedido finalizado! O Ateliê já recebeu seu pedido de forma segura.');
@@ -229,12 +243,21 @@ export default function Checkout() {
         <div className="space-y-6">
           <div className="card-product p-6 bg-secondary/30">
             <h2 className="text-xl font-semibold mb-4">Resumo do Pedido</h2>
-            <div className="flex items-center gap-4 mb-4 pb-4 border-b">
-               <img src={product.image_url} alt={product.name} className="w-16 h-16 rounded object-cover" />
-               <div className="flex-1">
-                 <p className="font-medium">{product.name}</p>
-                 <p className="text-sm text-muted-foreground">Qtd: {quantity}</p>
-               </div>
+            <div className="space-y-4 mb-4 pb-4 border-b">
+              {checkoutItems.map((item, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <img src={item.variant?.image_url || item.product.image_url} alt={item.product.name} className="w-16 h-16 rounded object-cover border" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{item.product.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Qtd: {item.quantity} 
+                      {item.variant && " - Modelo Específico"}
+                      {item.notes && ` (${item.notes})`}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold">R$ {(item.product.price * item.quantity).toFixed(2).replace('.', ',')}</p>
+                </div>
+              ))}
             </div>
             
             <div className="space-y-2 text-sm mb-4">
@@ -255,13 +278,18 @@ export default function Checkout() {
           </div>
 
           {!paymentSimulated && paymentMethod !== 'dinheiro' && (
-            <div className="card-product p-6 border-primary/30 bg-primary/5 text-center">
-               <h3 className="font-medium mb-2">Ambiente de Pagamento</h3>
-               <p className="text-sm text-muted-foreground mb-4">
-                 Para a segurança do vendedor, confirme o pagamento antes de enviar o pedido.
+            <div className="card-product p-6 border-primary/30 bg-primary/5 text-center space-y-4">
+               <h3 className="font-medium">Pagamento via {paymentMethod.toUpperCase()}</h3>
+               <div className="bg-background/80 p-4 rounded-xl border border-dashed border-primary/20 space-y-2">
+                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Chave PIX / CPF do Admin</p>
+                 <p className="text-lg font-mono font-bold text-primary tracking-wider">30909260249</p>
+                 <p className="text-[10px] text-muted-foreground italic">Grenda Oliveira - Proprietária</p>
+               </div>
+               <p className="text-xs text-muted-foreground">
+                 Após realizar a transferência ou pagamento no cartão, clique no botão abaixo para simular a confirmação automática do sistema.
                </p>
-               <button onClick={handleSimulatePayment} className="btn-hero w-full bg-green-600 hover:bg-green-700">
-                 Finalizar Pagamento ({paymentMethod.toUpperCase()})
+               <button onClick={handleSimulatePayment} className="btn-hero w-full bg-green-600 hover:bg-green-700 shadow-md">
+                 Confirmei o Pagamento
                </button>
             </div>
           )}

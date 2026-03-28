@@ -22,7 +22,7 @@ export default function OrderDetail() {
         .from('orders')
         .select(`
           *,
-          order_items(*, products(name, image_url))
+          order_items(*, products(name, image_url), variant:product_variants(*))
         `)
         .eq('id', id!)
         .maybeSingle();
@@ -116,10 +116,11 @@ export default function OrderDetail() {
               </h3>
               {order.order_items?.map((item: any) => (
                 <div key={item.id} className="flex gap-4 items-center">
-                  <img src={item.products?.image_url} alt="" className="w-12 h-12 bg-muted rounded object-cover" />
+                  <img src={item.variant?.image_url || item.products?.image_url} alt="" className="w-12 h-12 bg-muted rounded object-cover shadow-sm border border-border/50" />
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.products?.name}</p>
-                    <p className="text-sm text-muted-foreground">Qtd: {item.quantity} × R$ {item.unit_price.toFixed(2)}</p>
+                    {item.variant && <p className="text-[10px] text-primary font-bold uppercase tracking-wider">Modelo Específico</p>}
+                    <p className="text-xs text-muted-foreground mt-0.5">Qtd: {item.quantity} × R$ {item.unit_price.toFixed(2).replace('.', ',')}</p>
                   </div>
                   <p className="font-medium">R$ {(item.quantity * item.unit_price).toFixed(2).replace('.', ',')}</p>
                 </div>

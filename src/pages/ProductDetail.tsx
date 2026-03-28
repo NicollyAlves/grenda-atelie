@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ShoppingBag, ArrowLeft, MessageCircle, Package, Star } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
 export default function ProductDetail() {
@@ -16,6 +17,9 @@ export default function ProductDetail() {
   const [selectedImg, setSelectedImg] = useState(0);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+  const [showInquiry, setShowInquiry] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const { addItem } = useCart();
   const queryClient = useQueryClient();
 
   const { data: product, isLoading } = useQuery({
@@ -37,6 +41,39 @@ export default function ProductDetail() {
       return data || [];
     },
   });
+  const { data: variants } = useQuery({
+    queryKey: ['product_variants', id],
+    queryFn: async () => {
+      const { data } = await supabase.from('product_variants').select('*').eq('product_id', id!);
+      return data || [];
+    },
+  });
+
+  const { data: inquiries } = useQuery({
+    queryKey: ['product_inquiries', id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('product_inquiries')
+        .select('*')
+        .eq('product_id', id!)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  const activeVariant = useMemo(() => {
+    return variants?.find(v => v.id === selectedVariantId) || null;
+  }, [variants, selectedVariantId]);
+
+  const currentStock = useMemo(() => {
+    if (product?.has_variants && activeVariant) return activeVariant.stock_quantity;
+    return product?.stock_quantity || 0;
+  }, [product, activeVariant]);
 
   const submitReview = useMutation({
     mutationFn: async () => {
@@ -59,16 +96,56 @@ export default function ProductDetail() {
     }
   });
 
+  const submitInquiry = useMutation({
+    mutationFn: async () => {
+      if (!user) { navigate('/login'); return; }
+      const { error } = await supabase.from('product_inquiries').insert({
+        product_id: id,
+        user_id: user.id,
+        message: inquiryMessage,
+        is_from_admin: false
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setInquiryMessage('');
+      queryClient.invalidateQueries({ queryKey: ['product_inquiries', id] });
+      toast.success('Pergunta enviada!');
+    }
+  });
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    if (product.has_variants && !selectedVariantId) {
+      toast.error('Por favor, selecione um modelo clicando nas imagens abaixo.');
+      return;
+    }
+    
+    await addItem({
+      product_id: product.id,
+      variant_id: selectedVariantId || undefined,
+      quantity,
+      product,
+      variant: activeVariant
+    });
+  };
+
   const handleOrder = () => {
     if (!user) { navigate('/login'); return; }
     if (!product) return;
+    if (product.has_variants && !selectedVariantId) {
+      toast.error('Por favor, selecione um modelo/imagem.');
+      return;
+    }
     
-    // Redirect to Checkout page instead of saving directly.
     navigate('/checkout', {
       state: {
-        product,
-        quantity,
-        notes
+        items: [{
+          product,
+          variant: activeVariant,
+          quantity,
+          notes
+        }]
       }
     });
   };
@@ -83,23 +160,34 @@ export default function ProductDetail() {
       </button>
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
         {(() => {
-          const allImages = [product.image_url, ...((product as any).additional_images || [])].filter(Boolean) as string[];
+          const allImages = [
+            { url: product.image_url, id: null }, 
+            ...(variants?.map(v => ({ url: v.image_url, id: v.id })) || []),
+            ...((product as any).additional_images || []).map((url: string) => ({ url, id: null }))
+          ].filter(img => img.url) as { url: string, id: string | null }[];
+          
           return (
             <div className="space-y-3">
-              <div className="aspect-square rounded-xl overflow-hidden bg-muted">
-                {allImages.length > 0 ? (
-                  <img src={allImages[selectedImg] || allImages[0]} alt={product.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
-                  </div>
-                )}
+              <div className="aspect-square rounded-xl overflow-hidden bg-muted relative group">
+                <img 
+                  src={allImages[selectedImg]?.url || product.image_url} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                />
               </div>
               {allImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {allImages.map((img, i) => (
-                    <button key={i} onClick={() => setSelectedImg(i)} className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${i === selectedImg ? 'border-primary' : 'border-transparent'}`}>
-                      <img src={img} alt={`${product.name} ${i+1}`} className="w-full h-full object-cover" />
+                    <button 
+                      key={i} 
+                      onClick={() => {
+                        setSelectedImg(i);
+                        if (img.id) setSelectedVariantId(img.id);
+                        else if (i === 0 && !product.has_variants) setSelectedVariantId(null);
+                      }} 
+                      className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === selectedImg ? 'border-primary ring-2 ring-primary/20' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                    >
+                      <img src={img.url} alt={`${product.name} ${i+1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -117,8 +205,10 @@ export default function ProductDetail() {
           <div className="flex items-center gap-2 mb-6 text-sm">
             <Package className="h-4 w-4 text-muted-foreground" />
             {product.in_stock ? (
-              <span className="text-muted-foreground">
-                {product.stock_quantity > 0 ? `${product.stock_quantity} unidades em estoque` : 'Disponível sob encomenda'}
+              <span className={currentStock > 0 ? "text-muted-foreground" : "text-amber-600 font-medium"}>
+                {currentStock > 0 ? `${currentStock} unidades em estoque` : 'Disponível sob encomenda'}
+                {product.has_variants && activeVariant && " (modelo selecionado)"}
+                {product.has_variants && !activeVariant && " (selecione um modelo abaixo)"}
               </span>
             ) : (
               <span className="text-destructive font-medium">Esgotado</span>
@@ -141,20 +231,55 @@ export default function ProductDetail() {
                 onChange={e => setNotes(e.target.value)}
                 className="input-styled h-24 resize-none"
               />
+              <button onClick={handleAddToCart} className="btn-hero w-full bg-secondary text-foreground border border-border hover:bg-secondary/80 flex items-center justify-center gap-2">
+                Adicionar ao Carrinho
+              </button>
               <button onClick={handleOrder} disabled={ordering} className="btn-hero w-full flex items-center justify-center gap-2">
-                Ir para o Pagamento
+                Comprar Agora
               </button>
               
               <div className="pt-2">
-                <a
-                  href={`https://wa.me/message/L5LS7YREIUINO1?text=${encodeURIComponent(`Olá! Quero tirar uma dúvida sobre o produto: ${product.name}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => setShowInquiry(!showInquiry)}
                   className="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-medium rounded-lg border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
                 >
                   <MessageCircle className="h-4 w-4" />
                   Tirar Dúvida sobre o Produto
-                </a>
+                </button>
+
+                {showInquiry && (
+                  <div className="mt-4 border rounded-xl p-4 bg-card shadow-soft animate-in slide-in-from-top-2">
+                    <div className="max-h-40 overflow-y-auto space-y-3 mb-4 pr-2">
+                      {inquiries?.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">Mande sua dúvida abaixo e o admin responderá aqui mesmo!</p>
+                      ) : (
+                        inquiries?.map((msg: any) => (
+                          <div key={msg.id} className={`flex ${msg.is_from_admin ? 'justify-start' : 'justify-end'}`}>
+                            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-xs ${msg.is_from_admin ? 'bg-secondary text-foreground' : 'bg-primary text-white'}`}>
+                              {msg.message}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        value={inquiryMessage} 
+                        onChange={e => setInquiryMessage(e.target.value)}
+                        placeholder="Escreva sua dúvida..." 
+                        className="input-styled text-xs py-2 h-auto"
+                        onKeyDown={e => { if (e.key === 'Enter' && inquiryMessage.trim()) submitInquiry.mutate(); }}
+                      />
+                      <button 
+                        onClick={() => submitInquiry.mutate()} 
+                        disabled={!inquiryMessage.trim() || submitInquiry.isPending}
+                        className="btn-hero w-auto px-4 py-2 text-xs"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (

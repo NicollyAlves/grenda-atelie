@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -25,7 +26,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <div className="flex flex-col min-h-screen">
+          <CartProvider>
+            <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1">
               <Routes>
@@ -44,10 +46,11 @@ const App = () => (
             </main>
             <Footer />
           </div>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </TooltipProvider>
+</QueryClientProvider>
 );
 
 export default App;
