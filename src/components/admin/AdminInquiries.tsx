@@ -11,16 +11,33 @@ export default function AdminInquiries() {
   const { data: inquiries, isLoading } = useQuery({
     queryKey: ['admin-inquiries'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: inquiriesData, error } = await supabase
         .from('product_inquiries')
-        .select('*, product:products(name, image_url), profiles:user_id(full_name, phone)')
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching inquiries:', error);
         return [];
       }
-      return data || [];
+
+      if (inquiriesData && inquiriesData.length > 0) {
+        const productIds = [...new Set(inquiriesData.map(i => i.product_id))];
+        const userIds = [...new Set(inquiriesData.map(i => i.user_id))];
+        
+        const [productsRes, profilesRes] = await Promise.all([
+          supabase.from('products').select('id, name, image_url').in('id', productIds),
+          supabase.from('profiles').select('user_id, full_name, phone').in('user_id', userIds)
+        ]);
+
+        return inquiriesData.map(inquiry => ({
+          ...inquiry,
+          product: productsRes.data?.find(p => p.id === inquiry.product_id) || null,
+          profiles: profilesRes.data?.find(p => p.user_id === inquiry.user_id) || null
+        }));
+      }
+
+      return inquiriesData || [];
     },
   });
 

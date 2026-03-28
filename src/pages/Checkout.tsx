@@ -193,6 +193,7 @@ export default function Checkout() {
         payment_method: paymentMethod,
         payment_status: finalPaymentStatus,
         shipping_fee: shippingFee || 0,
+        order_type: orderType,
       }).select().single();
       
       if (orderErr) throw orderErr;

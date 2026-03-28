@@ -33,12 +33,25 @@ export default function ProductDetail() {
   const { data: reviews } = useQuery({
     queryKey: ['product_reviews', id],
     queryFn: async () => {
-      const { data } = await supabase
+      // Manual join with profiles to ensure it works even if PostgREST relations are tricky
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('product_reviews' as any)
-        .select(`*, profiles:user_id(full_name)`)
+        .select('*')
         .eq('product_id', id!)
         .order('created_at', { ascending: false });
-      return data || [];
+        
+      if (reviewsError) throw reviewsError;
+      
+      if (reviewsData && reviewsData.length > 0) {
+        const userIds = [...new Set(reviewsData.map((r: any) => r.user_id))];
+        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', userIds);
+        
+        return reviewsData.map((review: any) => ({
+          ...review,
+          profiles: profiles?.find((p: any) => p.user_id === review.user_id) || null
+        }));
+      }
+      return reviewsData || [];
     },
   });
   const { data: variants } = useQuery({
@@ -97,6 +110,20 @@ export default function ProductDetail() {
       toast.error('Erro ao enviar avaliação.');
     }
   });
+
+  const deleteReview = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { error } = await supabase.from('product_reviews' as any).delete().eq('id', reviewId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Avaliação removida!');
+      queryClient.invalidateQueries({ queryKey: ['product_reviews', id] });
+    }
+  });
+
+  const { isAdmin } = useAuth();
+  const [editingReview, setEditingReview] = useState<string | null>(null);
 
   const submitInquiry = useMutation({
     mutationFn: async () => {
@@ -326,8 +353,13 @@ export default function ProductDetail() {
         </h3>
 
         {user && (
-          <div className="bg-muted/30 p-5 rounded-xl mb-8 space-y-4">
-            <h4 className="font-medium text-sm">Deixe sua avaliação</h4>
+          <div id="review-form" className="bg-background border border-primary/20 p-6 rounded-2xl mb-12 shadow-soft space-y-4 animate-in fade-in zoom-in duration-300">
+            <h4 className="font-bold text-sm uppercase tracking-widest text-primary flex items-center justify-between">
+              {editingReview ? 'Editando sua avaliação' : 'Deixe sua avaliação'}
+              {editingReview && (
+                <button onClick={() => { setEditingReview(null); setReviewComment(''); setReviewRating(5); }} className="text-[10px] text-muted-foreground underline">Cancelar</button>
+              )}
+            </h4>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map(star => (
                 <button key={star} onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform hover:scale-110">
@@ -341,15 +373,29 @@ export default function ProductDetail() {
                 placeholder="Conte o que achou..."
                 value={reviewComment}
                 onChange={e => setReviewComment(e.target.value)}
-                className="input-styled flex-1"
+                className="input-styled flex-1 h-12"
                 maxLength={150}
               />
               <button 
-                onClick={() => submitReview.mutate()} 
+                onClick={() => {
+                  if (editingReview) {
+                    supabase.from('product_reviews' as any).update({ rating: reviewRating, comment: reviewComment }).eq('id', editingReview).then(({ error }) => {
+                      if (error) toast.error('Erro ao editar.');
+                      else {
+                        toast.success('Avaliação atualizada!');
+                        setEditingReview(null);
+                        setReviewComment('');
+                        queryClient.invalidateQueries({ queryKey: ['product_reviews', id] });
+                      }
+                    });
+                  } else {
+                    submitReview.mutate();
+                  }
+                }} 
                 disabled={submitReview.isPending || !reviewComment.trim()} 
-                className="btn-hero py-3 px-8 whitespace-nowrap"
+                className="btn-hero py-3 px-8 whitespace-nowrap h-12 shadow-lg"
               >
-                Enviar
+                {editingReview ? 'Salvar' : 'Postar'}
               </button>
             </div>
           </div>
@@ -360,17 +406,49 @@ export default function ProductDetail() {
             <p className="text-muted-foreground text-sm text-center py-6">Nenhuma avaliação ainda.</p>
           ) : (
             reviews?.map((review: any) => (
-              <div key={review.id} className="pb-4 border-b border-border/30 last:border-0 opacity-90 transition-opacity hover:opacity-100">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm">{review.profiles?.full_name || 'Cliente Oculto'}</span>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <Star key={star} className={`w-3 h-3 ${review.rating >= star ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
-                    ))}
+              <div key={review.id} className="pb-6 border-b border-border/30 last:border-0 opacity-90 transition-opacity hover:opacity-100 group">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-foreground">{review.profiles?.full_name || 'Cliente Oculto'}</span>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star key={star} className={`w-3 h-3 ${review.rating >= star ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
+                      ))}
+                    </div>
                   </div>
+                  
+                  {(user?.id === review.user_id || isAdmin) && (
+                    <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {user?.id === review.user_id && (
+                        <button 
+                          onClick={() => {
+                            setReviewComment(review.comment);
+                            setReviewRating(review.rating);
+                            setEditingReview(review.id);
+                            window.scrollTo({ top: document.getElementById('review-form')?.offsetTop || 0, behavior: 'smooth' });
+                          }}
+                          className="text-[10px] font-bold uppercase text-primary hover:underline"
+                        >
+                          Editar
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          if (window.confirm('Tem certeza que deseja apagar esta avaliação?')) {
+                            deleteReview.mutate(review.id);
+                          }
+                        }}
+                        className="text-[10px] font-bold uppercase text-destructive hover:underline"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {review.comment && <p className="text-muted-foreground text-sm leading-relaxed">{review.comment}</p>}
-                <p className="text-xs text-muted-foreground/60 mt-2">{new Date(review.created_at).toLocaleDateString('pt-BR')}</p>
+                {review.comment && <p className="text-muted-foreground text-sm leading-relaxed mb-2 font-medium">"{review.comment}"</p>}
+                <p className="text-[10px] text-muted-foreground/50 uppercase tracking-tighter">
+                  {new Date(review.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
               </div>
             ))
           )}

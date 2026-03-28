@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Package } from 'lucide-react';
+import { Search, Filter, Calendar, DollarSign, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
@@ -8,6 +9,10 @@ const statuses = ['aguardando_pagamento', 'pendente', 'em andamento', 'indo para
 
 export default function AdminOrders() {
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
@@ -44,14 +49,75 @@ export default function AdminOrders() {
     },
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Carregando pedidos...</p>;
+  if (isLoading) return <div className="p-10 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div><p className="text-muted-foreground">Carregando pedidos...</p></div>;
+
+  const filteredOrders = orders?.filter((order: any) => {
+    const matchesSearch = 
+      order.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.order_items?.some((item: any) => item.products?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !filterDate || new Date(order.created_at).toLocaleDateString() === new Date(filterDate + 'T00:00:00').toLocaleDateString();
+    const matchesPrice = !minPrice || order.total >= parseFloat(minPrice);
+    
+    return matchesSearch && matchesDate && matchesPrice;
+  }) || [];
 
   return (
-    <div className="space-y-4">
-      {!orders || orders.length === 0 ? (
-        <p className="text-center text-muted-foreground py-10">Nenhum pedido ainda.</p>
+    <div className="space-y-6">
+      {/* Search and Filters */}
+      <div className="sticky top-0 z-10 bg-background pb-4 pt-1">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center bg-card p-4 rounded-2xl border border-border shadow-soft">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input 
+              type="text" 
+              placeholder="Buscar por cliente, produto ou ID..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="input-styled pl-10 text-sm h-11"
+            />
+          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 h-11 rounded-lg text-sm font-medium border transition-all ${showFilters ? 'bg-primary text-white border-primary' : 'bg-background hover:bg-muted'}`}
+          >
+            <Filter className="h-4 w-4" /> {showFilters ? 'Fechar Filtros' : 'Filtros'}
+          </button>
+        </div>
+        
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border/50 animate-in slide-in-from-top-4 duration-300">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase ml-1 flex items-center gap-1"><Calendar className="h-3 w-3" /> Data do Pedido</label>
+              <input 
+                type="date" 
+                value={filterDate}
+                onChange={e => setFilterDate(e.target.value)}
+                className="input-styled text-sm h-10"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase ml-1 flex items-center gap-1"><DollarSign className="h-3 w-3" /> Valor Mínimo (R$)</label>
+              <input 
+                type="number" 
+                placeholder="0,00"
+                value={minPrice}
+                onChange={e => setMinPrice(e.target.value)}
+                className="input-styled text-sm h-10"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {!filteredOrders || filteredOrders.length === 0 ? (
+        <div className="text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed">
+          <Package className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+          <p className="text-muted-foreground">Nenhum pedido encontrado com esses filtros.</p>
+        </div>
       ) : (
-        orders.map((order: any) => (
+        filteredOrders.map((order: any) => (
           <div key={order.id} className="card-product p-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div>
@@ -72,13 +138,21 @@ export default function AdminOrders() {
                     updateStatus.mutate({ id: order.id, status: newStatus });
                   }
                 }}
-                className="input-styled w-auto text-sm"
+                className="input-styled w-auto text-sm h-10 min-w-[180px]"
               >
-                {statuses.map(s => (
-                  <option key={s} value={s}>
-                    {s} {order.payment_method === 'dinheiro' && order.payment_status === 'pendente' && s !== 'aguardando_pagamento' ? '(Aguardando Pagamento)' : ''}
-                  </option>
-                ))}
+                {statuses.map(s => {
+                  const isConcluidoOuCancelado = s === 'concluido' || s === 'cancelado' || s === 'recusado';
+                  const isRetirada = order.order_type === 'retirada' || order.payment_method === 'dinheiro';
+                  const isIndoEntrega = s === 'indo para entrega';
+                  const needsWaitingPayment = !isConcluidoOuCancelado && isRetirada && order.payment_status === 'pendente' && s !== 'aguardando_pagamento';
+                  
+                  return (
+                    <option key={s} value={s} disabled={isRetirada && isIndoEntrega}>
+                      {s.replace('_', ' ')} {needsWaitingPayment ? '(Aguardando Pagamento)' : ''}
+                      {isRetirada && isIndoEntrega ? ' (Apenas p/ Entrega)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <div className="space-y-3">
