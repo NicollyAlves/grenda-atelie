@@ -6,49 +6,33 @@
 
 @layer base {
   :root {
-    /* LUXURY ULTRA-WOW PALETTE */
-    --background: 30 50% 98.5%;
-    --foreground: 22 60% 8%;
+    /* LUXURY MINIMALIST PALETTE */
+    --background: 30 40% 98.5%;
+    --foreground: 22 40% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 22 60% 8%;
+    --card-foreground: 22 40% 10%;
 
-    /* Sophisticated Wine / Velvet Burgundy */
-    --primary: 345 55% 42%; 
-    --primary-foreground: 30 50% 99%;
+    --primary: 345 50% 45%; 
+    --primary-foreground: 30 40% 98.5%;
 
-    /* Pure Champagne Gold */
-    --accent: 42 60% 55%;
-    --accent-foreground: 22 60% 8%;
+    --secondary: 30 20% 95%;
 
-    --secondary: 30 20% 90%;
-    --secondary-foreground: 22 50% 15%;
+    --accent: 42 50% 60%;
+    --accent-foreground: 22 40% 10%;
 
-    --muted: 30 10% 92%;
-    --muted-foreground: 22 15% 40%;
+    --border: 25 10% 90%;
+    --input: 25 10% 90%;
+    --ring: 345 50% 45%;
 
-    --border: 25 20% 85%;
-    --input: 25 20% 85%;
-    --ring: 345 55% 42%;
-
-    --radius: 1.5rem;
+    --radius: 2rem;
 
     --font-display: 'Outfit', sans-serif;
     --font-serif: 'Playfair Display', serif;
     --font-body: 'Inter', sans-serif;
 
-    /* SOMBRAS DE PRODUÇÃO DE ALTO NÍVEL */
-    --shadow-wow: 0 20px 50px -12px hsl(345 55% 15% / 0.15);
-    --shadow-glow: 0 0 30px -5px hsl(var(--primary) / 0.3);
-  }
-
-  .dark {
-    --background: 22 40% 5%;
-    --foreground: 30 15% 95%;
-    --card: 22 30% 8%;
-    --primary: 345 60% 55%;
-    --accent: 42 70% 60%;
-    --border: 22 20% 12%;
+    --shadow-soft: 0 10px 40px -15px hsl(22 40% 10% / 0.05);
+    --shadow-wow: 0 20px 60px -15px hsl(345 50% 45% / 0.1);
   }
 }
 
@@ -56,89 +40,51 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary overflow-x-hidden;
     font-family: var(--font-body);
-    /* TEXTURA DE GRÃO / NOISE */
-    background-image: url('https://www.transparenttextures.com/patterns/p6-1.png');
-    background-size: 200px;
-    background-repeat: repeat;
+    /* TEXTURA SUTIL DE SEDA */
+    background-image: radial-gradient(circle at center, transparent, hsl(var(--secondary) / 0.5));
   }
 }
 
 @layer components {
-  /* BOTÃO COM GLOW MODERNO */
-  .btn-wow {
-    @apply relative px-10 py-5 rounded-full font-bold text-lg transition-all duration-700 overflow-hidden shadow-wow active:scale-95;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(350 60% 55%));
-    color: white;
+  /* CARD EM CÁPSULA SIMÉTRICA */
+  .card-capsule {
+    @apply relative bg-card rounded-t-full rounded-b-[4rem] overflow-hidden transition-all duration-700 shadow-soft hover:shadow-wow hover:-translate-y-2 border border-border/50;
   }
-  .btn-wow::after {
-    content: '';
-    @apply absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-500;
-  }
-  .btn-wow:hover {
-    @apply -translate-y-2 shadow-glow scale-[1.02] brightness-110;
-  }
-  .btn-wow:hover::after {
-    @apply opacity-100 animate-pulse;
+  
+  .glass-pill {
+    @apply backdrop-blur-[20px] bg-white/40 border border-white/60 shadow-lg;
   }
 
-  .section-title-wow {
-    @apply text-6xl md:text-9xl font-black tracking-tighter leading-[0.8] uppercase;
+  /* BOTÃO MINIMALISTA */
+  .btn-minimal {
+    @apply px-12 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs transition-all duration-500 active:scale-95 border-2 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground;
+  }
+
+  .text-luxury {
+    @apply text-6xl md:text-8xl lg:text-[10rem] font-black tracking-tighter uppercase;
     font-family: var(--font-display);
-    background: linear-gradient(to bottom, hsl(var(--foreground)), hsl(var(--primary) / 0.8));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .glass-premium {
-    @apply backdrop-blur-[40px] bg-white/30 border border-white/40 shadow-wow;
-  }
-
-  /* MARQUEE INFINITO */
-  .marquee-container {
-    @apply overflow-hidden whitespace-nowrap bg-primary py-4 text-primary-foreground font-black text-sm uppercase tracking-[0.5em];
-  }
-  .marquee-content {
-    @apply inline-block animate-marquee;
   }
 }
 
-/* CUSTOM ANIMATIONS */
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+/* INTERACTIVE AURA */
+.aura-follower {
+  @apply fixed pointer-events-none rounded-full blur-[100px] opacity-20 z-[-1] transition-opacity duration-1000;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.6) 0%, transparent 70%);
 }
 
-.animate-marquee {
-  animation: marquee 30s linear infinite;
+/* ANIMATIONS */
+.animate-silk {
+  animation: silk-movement 20s ease-in-out infinite alternate;
 }
 
-/* AMORPHOUS MESH MESH GRADIENT */
-.mesh-blob {
-  @apply fixed rounded-full filter blur-[120px] mix-blend-multiply opacity-30 select-none z-[-1];
+@keyframes silk-movement {
+  0% { transform: translate(-30px, -30px) scale(1); }
+  50% { transform: translate(30px, 30px) scale(1.1); }
+  100% { transform: translate(-30px, 30px) scale(1); }
 }
 
-.blob-1 {
-  @apply w-[800px] h-[800px] bg-primary top-[-20%] left-[-10%] animate-blob;
-}
-
-.blob-2 {
-  @apply w-[600px] h-[600px] bg-accent bottom-[-10%] right-[-5%] animate-blob delay-1000;
-}
-
-.blob-3 {
-  @apply w-[700px] h-[700px] bg-rose-300 top-[30%] left-[40%] animate-blob delay-2000;
-}
-
-@keyframes blob {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0); }
-  33% { transform: translate(100px, -50px) scale(1.1) rotate(10deg); }
-  66% { transform: translate(-50px, 100px) scale(0.9) rotate(-10deg); }
-}
-
-.animate-blob {
-  animation: blob 25s ease-in-out infinite;
-}
-
-.text-reveal {
-  @apply opacity-0 translate-y-20 animate-in fade-in slide-in-from-bottom-20 duration-1000 fill-mode-forwards;
+.misty-bg {
+  @apply fixed inset-0 z-[-2] bg-gradient-to-tr from-secondary/50 via-background to-rose-50/30 animate-silk;
 }
