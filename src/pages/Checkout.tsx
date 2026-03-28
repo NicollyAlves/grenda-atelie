@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Truck, CreditCard, Banknote, QrCode, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Truck, CreditCard, Banknote, QrCode, CheckCircle2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { items: cartItems, clearCart } = useCart();
   
   const state = location.state as { 
-    items?: { product: any; variant?: any; quantity: number; notes: string }[];
+    items?: { product: any; variant?: any; selected_image_url?: string; quantity: number; notes: string }[];
     product?: any; 
     quantity?: number; 
     notes?: string;
@@ -24,15 +26,20 @@ export default function Checkout() {
   const [ordering, setOrdering] = useState(false);
   const [paymentSimulated, setPaymentSimulated] = useState(false);
 
+  // Card form state
+  const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvv: '' });
+
   if (!user) return <Navigate to="/login" replace />;
-  if (!state || (!state.items && !state.product)) return <Navigate to="/" replace />;
   
-  const checkoutItems = state.items || (state.product ? [{ 
+  const checkoutItems = state?.items || (state?.product ? [{ 
     product: state.product, 
     quantity: state.quantity || 1, 
     notes: state.notes || '',
-    variant: (state as any).variant 
-  }] : []);
+    variant: (state as any).variant,
+    selected_image_url: (state as any).selected_image_url
+  }] : cartItems);
+
+  if (checkoutItems.length === 0) return <Navigate to="/" replace />;
 
   const productTotal = checkoutItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const total = productTotal + (shippingFee || 0);
@@ -131,8 +138,22 @@ export default function Checkout() {
       toast.error('Calcule o frete antes de prosseguir.');
       return;
     }
+
+    if (paymentMethod === 'cartao') {
+      if (cardData.number.length < 16 || !cardData.name || !cardData.expiry || cardData.cvv.length < 3) {
+        toast.error('Preencha os dados do cartão corretamente.');
+        return;
+      }
+    }
+
     setPaymentSimulated(true);
     toast.success('Pagamento processado (Simulação)');
+  };
+
+  const copyPix = () => {
+    const pixCode = `30909260249-TOTAL-R$${total.toFixed(2)}`;
+    navigator.clipboard.writeText(pixCode);
+    toast.success('Código PIX copiado!');
   };
 
   const handleFinishOrder = async () => {
@@ -169,6 +190,7 @@ export default function Checkout() {
       const { error: itemErr } = await supabase.from('order_items').insert(orderItems);
       if (itemErr) throw itemErr;
 
+      await clearCart();
       toast.success('Pedido finalizado! O Ateliê já recebeu seu pedido de forma segura.');
       navigate('/meus-pedidos');
     } catch (error) {
@@ -246,13 +268,15 @@ export default function Checkout() {
             <div className="space-y-4 mb-4 pb-4 border-b">
               {checkoutItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <img src={item.variant?.image_url || item.product.image_url} alt={item.product.name} className="w-16 h-16 rounded object-cover border" />
+                  <img src={item.selected_image_url || item.variant?.image_url || item.product.image_url} alt={item.product.name} className="w-16 h-16 rounded object-cover border" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.product.name}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                      {item.variant ? "Modelo Específico" : "Modelo Padrão"}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">
                       Qtd: {item.quantity} 
-                      {item.variant && " - Modelo Específico"}
-                      {item.notes && ` (${item.notes})`}
+                      {item.notes && ` - Obs: ${item.notes}`}
                     </p>
                   </div>
                   <p className="text-sm font-bold">R$ {(item.product.price * item.quantity).toFixed(2).replace('.', ',')}</p>
@@ -278,18 +302,82 @@ export default function Checkout() {
           </div>
 
           {!paymentSimulated && paymentMethod !== 'dinheiro' && (
-            <div className="card-product p-6 border-primary/30 bg-primary/5 text-center space-y-4">
-               <h3 className="font-medium">Pagamento via {paymentMethod.toUpperCase()}</h3>
-               <div className="bg-background/80 p-4 rounded-xl border border-dashed border-primary/20 space-y-2">
-                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Chave PIX / CPF do Admin</p>
-                 <p className="text-lg font-mono font-bold text-primary tracking-wider">30909260249</p>
-                 <p className="text-[10px] text-muted-foreground italic">Grenda Oliveira - Proprietária</p>
-               </div>
-               <p className="text-xs text-muted-foreground">
-                 Após realizar a transferência ou pagamento no cartão, clique no botão abaixo para simular a confirmação automática do sistema.
+            <div className="card-product p-6 border-primary/30 bg-primary/5 text-center space-y-4 animate-in fade-in zoom-in duration-300">
+               <h3 className="font-semibold text-lg">Pagamento via {paymentMethod === 'pix' ? 'PIX' : 'CARTÃO'}</h3>
+               
+               {paymentMethod === 'pix' ? (
+                 <div className="space-y-4">
+                   <div className="bg-background/80 p-5 rounded-xl border-2 border-dashed border-primary/20 space-y-3 relative group">
+                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Chave PIX / CPF do Admin</p>
+                     <p className="text-xl font-mono font-bold text-primary tracking-tighter">30909260249</p>
+                     <p className="text-[10px] text-muted-foreground italic">Grenda Oliveira - Proprietária</p>
+                     <button 
+                        onClick={copyPix}
+                        className="absolute top-2 right-2 p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                        title="Copiar Código"
+                     >
+                       <Copy className="h-4 w-4" />
+                     </button>
+                   </div>
+                   <p className="text-xs text-muted-foreground font-medium">
+                     Valor total com frete: <span className="text-primary font-bold">R$ {total.toFixed(2).replace('.', ',')}</span>
+                   </p>
+                 </div>
+               ) : (
+                 <div className="space-y-3 text-left">
+                    <div className="grid gap-2">
+                       <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Número do Cartão</label>
+                       <input 
+                        type="text" 
+                        placeholder="0000 0000 0000 0000" 
+                        maxLength={16}
+                        value={cardData.number}
+                        onChange={e => setCardData({...cardData, number: e.target.value.replace(/\D/g, '')})}
+                        className="input-styled text-sm" 
+                       />
+                    </div>
+                    <div className="grid gap-2">
+                       <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nome no Cartão</label>
+                       <input 
+                        type="text" 
+                        placeholder="NOME COMPLETO" 
+                        value={cardData.name}
+                        onChange={e => setCardData({...cardData, name: e.target.value.toUpperCase()})}
+                        className="input-styled text-sm" 
+                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Validade</label>
+                        <input 
+                          type="text" 
+                          placeholder="MM/AA" 
+                          maxLength={5}
+                          value={cardData.expiry}
+                          onChange={e => setCardData({...cardData, expiry: e.target.value})}
+                          className="input-styled text-sm" 
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">CVV</label>
+                        <input 
+                          type="text" 
+                          placeholder="123" 
+                          maxLength={3}
+                          value={cardData.cvv}
+                          onChange={e => setCardData({...cardData, cvv: e.target.value.replace(/\D/g, '')})}
+                          className="input-styled text-sm" 
+                        />
+                      </div>
+                    </div>
+                 </div>
+               )}
+
+               <p className="text-[11px] text-muted-foreground px-2">
+                 Clique no botão abaixo para simular a confirmação automática do pagamento pelo nosso sistema.
                </p>
-               <button onClick={handleSimulatePayment} className="btn-hero w-full bg-green-600 hover:bg-green-700 shadow-md">
-                 Confirmei o Pagamento
+               <button onClick={handleSimulatePayment} className="btn-hero w-full bg-green-600 hover:bg-green-700 shadow-lg py-4 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                 <CheckCircle2 className="h-5 w-5" /> Confirmei o Pagamento
                </button>
             </div>
           )}

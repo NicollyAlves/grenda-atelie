@@ -41,16 +41,18 @@ export default function CartDrawer() {
             <div className="space-y-4">
               {items.map((item, index) => (
                 <div key={`${item.product_id}-${item.variant_id || index}`} className="flex gap-4 p-2 rounded-lg hover:bg-secondary/30 transition-colors">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  <Link to={`/produto/${item.product_id}`} className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0 transition-opacity hover:opacity-80">
                     <img 
-                      src={item.variant?.image_url || item.product?.image_url} 
+                      src={item.selected_image_url || item.variant?.image_url || item.product?.image_url} 
                       alt={item.product?.name} 
                       className="w-full h-full object-cover"
                     />
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-foreground truncate text-sm">{item.product?.name}</h4>
+                      <Link to={`/produto/${item.product_id}`} className="hover:text-primary transition-colors truncate block">
+                        <h4 className="font-medium text-foreground text-sm truncate">{item.product?.name}</h4>
+                      </Link>
                       <button 
                         onClick={() => removeItem(item.product_id, item.variant_id)}
                         className="text-muted-foreground hover:text-destructive transition-colors ml-2"

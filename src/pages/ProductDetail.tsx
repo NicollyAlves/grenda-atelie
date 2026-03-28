@@ -121,9 +121,16 @@ export default function ProductDetail() {
       return;
     }
     
+    const allImages = [
+      { url: product.image_url, id: null }, 
+      ...(variants?.map(v => ({ url: v.image_url, id: v.id })) || []),
+      ...((product as any).additional_images || []).map((url: string) => ({ url, id: null }))
+    ].filter(img => img.url) as { url: string, id: string | null }[];
+
     await addItem({
       product_id: product.id,
       variant_id: selectedVariantId || undefined,
+      selected_image_url: allImages[selectedImg]?.url,
       quantity,
       product,
       variant: activeVariant
@@ -138,11 +145,18 @@ export default function ProductDetail() {
       return;
     }
     
+    const allImages = [
+      { url: product.image_url, id: null }, 
+      ...(variants?.map(v => ({ url: v.image_url, id: v.id })) || []),
+      ...((product as any).additional_images || []).map((url: string) => ({ url, id: null }))
+    ].filter(img => img.url) as { url: string, id: string | null }[];
+
     navigate('/checkout', {
       state: {
         items: [{
           product,
           variant: activeVariant,
+          selected_image_url: allImages[selectedImg]?.url,
           quantity,
           notes
         }]
