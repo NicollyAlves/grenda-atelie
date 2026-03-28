@@ -90,6 +90,8 @@ export default function ProductDetail() {
       toast.success('Avaliação enviada!');
       setReviewComment('');
       queryClient.invalidateQueries({ queryKey: ['product_reviews', id] });
+      // Force immediate refetch
+      queryClient.fetchQuery({ queryKey: ['product_reviews', id] });
     },
     onError: () => {
       toast.error('Erro ao enviar avaliação.');
@@ -200,7 +202,7 @@ export default function ProductDetail() {
                         if (img.id) setSelectedVariantId(img.id);
                         else if (i === 0 && !product.has_variants) setSelectedVariantId(null);
                       }} 
-                      className={`w-18 h-18 md:w-20 md:h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all aspect-square shadow-sm ${i === selectedImg ? 'border-primary ring-4 ring-primary/10' : 'border-transparent opacity-60 hover:opacity-100 hover:border-primary/30'}`}
+                      className={`w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all aspect-square shadow-sm ${i === selectedImg ? 'border-primary ring-4 ring-primary/10' : 'border-transparent opacity-60 hover:opacity-100 hover:border-primary/30'}`}
                     >
                       <img src={img.url} alt={`${product.name} ${i+1}`} className="w-full h-full object-cover" />
                     </button>
