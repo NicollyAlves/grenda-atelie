@@ -15,12 +15,12 @@ export default function Index() {
 
   return (
     <div className="relative min-h-screen">
-      {/* HERO SECTION — RESTAURADA PARA O ESTILO QUE VOCÊ GOSTAVA */}
-      <section className="relative min-h-[85vh] flex items-center pt-24 pb-12 overflow-hidden bg-gradient-to-br from-rose-50/50 via-white to-rose-100/50">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* TEXT COLUMN */}
-            <div className="text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000">
+      {/* HERO SECTION — RESTAURADA COM RESPIRO NAS BORDAS */}
+      <section className="relative min-h-[85vh] flex items-center pt-24 pb-12 overflow-hidden bg-gradient-to-br from-rose-50/10 via-transparent to-rose-100/10">
+        <div className="container mx-auto px-4 lg:px-20 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* TEXT COLUMN — AFASTADA DA BORDA ESQUERDA NO DESKTOP */}
+            <div className="text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left-10 duration-1000 lg:pr-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase">
                 Grenda Ateliê • Artesanal
               </div>
