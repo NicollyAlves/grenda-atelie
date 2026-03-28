@@ -6,22 +6,22 @@
 
 @layer base {
   :root {
-    /* PALETA ROSA / ROSE GOLD (PREFERIDA) */
-    --background: 0 0% 100%;
-    --foreground: 345 40% 15%;
+    /* LIGHT MODE — ROSA DELICADO E BRANCO */
+    --background: 345 30% 99%;
+    --foreground: 30 40% 12%; /* Marrom Café Profundo para Texto */
 
     --card: 0 0% 100%;
-    --card-foreground: 345 40% 15%;
+    --card-foreground: 30 40% 12%;
 
-    --primary: 345 50% 55%; 
+    --primary: 345 55% 60%; /* Rosa Seco Delicado */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 345 40% 97%;
-    --accent: 30 30% 90%;
+    --secondary: 345 30% 97%;
+    --accent: 30 30% 95%;
 
-    --border: 345 20% 90%;
-    --input: 345 20% 94%;
-    --ring: 345 50% 55%;
+    --border: 345 15% 92%;
+    --input: 345 15% 94%;
+    --ring: 345 55% 60%;
 
     --radius: 0.75rem;
 
@@ -30,14 +30,22 @@
   }
 
   .dark {
-    --background: 345 20% 6%;
-    --foreground: 345 10% 95%;
-    --card: 345 20% 10%;
-    --card-foreground: 345 10% 95%;
-    --primary: 345 50% 65%;
-    --secondary: 345 20% 12%;
-    --border: 345 20% 15%;
-    --input: 345 20% 15%;
+    /* DARK MODE — MARROM CAFÉ E CREME (CONFORME INIÍCIO DO PROJETO) */
+    --background: 25 35% 7%; /* Marrom Escuro Chocolate */
+    --foreground: 35 40% 95%; /* Creme Champagne */
+    
+    --card: 25 30% 10%; /* Marrom Tabaco */
+    --card-foreground: 35 40% 95%;
+    
+    --primary: 20 45% 60%; /* Rose Gold / Cobre Quente */
+    --primary-foreground: 25 35% 7%;
+    
+    --secondary: 25 25% 15%;
+    --accent: 25 25% 12%;
+    
+    --border: 25 20% 18%;
+    --input: 25 20% 18%;
+    --ring: 20 45% 60%;
   }
 
   * {
@@ -51,22 +59,21 @@
 
   /* Aplica o degradê rosa apenas no modo claro */
   :root:not(.dark) body {
-    background: linear-gradient(135deg, hsl(345 40% 98%) 0%, hsl(0 0% 100%) 100%);
+    background: linear-gradient(135deg, hsl(345 50% 98%) 0%, #ffffff 100%);
     background-attachment: fixed;
   }
 
-  /* ESTILO GLOBAL DE INPUTS E SELECTS — PREMIUM */
+  /* ESTILO GLOBAL DE INPUTS E SELECTS — REFINADO */
   input, select, textarea {
     @apply bg-background border border-border px-5 py-3 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm font-medium;
   }
   
   select {
-    @apply appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-12;
+    @apply appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%23999%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px] bg-[right_1rem_center] bg-no-repeat pr-12;
   }
 
-  /* BOTÕES E CARDS — RESTAURADOS */
   .btn-hero {
-    @apply bg-primary text-primary-foreground px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-primary/20;
+    @apply bg-primary text-primary-foreground px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-md;
   }
 }
 
@@ -76,7 +83,7 @@
   }
 
   .glass {
-    @apply backdrop-blur-md bg-white/70 border border-white/50 shadow-lg text-foreground;
+    @apply backdrop-blur-md bg-card/60 border border-border shadow-lg text-foreground;
   }
 
   .image-3d-stack {
