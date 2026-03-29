@@ -41,6 +41,7 @@ const App = () => (
                 <Route path="/meus-pedidos" element={<MyOrders />} />
                 <Route path="/pedido/:id" element={<OrderDetail />} />
                 <Route path="/minha-conta" element={<MyAccount />} />
+                <Route path="/minhas-duvidas" element={<MyInquiries />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

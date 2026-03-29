@@ -99,6 +99,7 @@ export default function Header() {
           {user ? (
             <>
               <Link to="/meus-pedidos" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Meus Pedidos</Link>
+              <Link to="/minhas-duvidas" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minhas Dúvidas</Link>
               <Link to="/minha-conta" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minha Conta</Link>
               {isAdmin && (
                 <Link to="/admin" className="block text-lg font-medium text-primary flex items-center gap-2" onClick={() => setMenuOpen(false)}>
