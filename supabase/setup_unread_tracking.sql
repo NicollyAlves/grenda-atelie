@@ -47,3 +47,26 @@ CREATE POLICY "Users can mark their order messages as read" ON public.order_mess
       AND orders.user_id = auth.uid()
     )
   );
+
+-- 8. Permitir que usuários vejam respostas do admin nas dúvidas de produtos
+-- (as respostas do admin têm is_from_admin=true e user_id=admin, por isso a política anterior não as retornava)
+DROP POLICY IF EXISTS "Users and admins can view inquiries" ON public.product_inquiries;
+CREATE POLICY "Users and admins can view inquiries" ON public.product_inquiries FOR SELECT
+  USING (
+    -- Admin pode ver tudo
+    EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
+    OR
+    -- Usuário pode ver suas próprias mensagens
+    auth.uid() = user_id
+    OR
+    -- Usuário pode ver respostas do admin para produtos que ele perguntou
+    (
+      is_from_admin = true
+      AND EXISTS (
+        SELECT 1 FROM public.product_inquiries pi2
+        WHERE pi2.product_id = product_inquiries.product_id
+        AND pi2.user_id = auth.uid()
+        AND pi2.is_from_admin = false
+      )
+    )
+  );

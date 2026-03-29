@@ -89,14 +89,15 @@ export default function ProductDetail() {
   });
 
   const { data: inquiries } = useQuery({
-    queryKey: ['product_inquiries', id],
+    queryKey: ['product_inquiries', id, user?.id],
     queryFn: async () => {
       if (!user) return [];
+      // Busca mensagens do usuário + respostas do admin para este produto
       const { data } = await supabase
         .from('product_inquiries')
         .select('*')
         .eq('product_id', id!)
-        .eq('user_id', user.id)
+        .or(`user_id.eq.${user.id},is_from_admin.eq.true`)
         .order('created_at', { ascending: true });
       return data || [];
     },
