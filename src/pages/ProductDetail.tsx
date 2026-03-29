@@ -213,11 +213,12 @@ export default function ProductDetail() {
       return;
     }
     
-    const allImages = [
-      { url: product.image_url, id: null }, 
-      ...(variants?.map(v => ({ url: v.image_url, id: v.id })) || []),
-      ...((product as any).additional_images || []).map((url: string) => ({ url, id: null }))
-    ].filter(img => img.url) as { url: string, id: string | null }[];
+    const allImages = product.has_variants
+      ? (variants?.map(v => ({ url: v.image_url, id: v.id })) || []).filter(img => img.url) as { url: string, id: string | null }[]
+      : [
+          { url: product.image_url, id: null }, 
+          ...((product as any).additional_images || []).map((url: string) => ({ url, id: null }))
+        ].filter(img => img.url) as { url: string, id: string | null }[];
 
     await addItem({
       product_id: product.id,
