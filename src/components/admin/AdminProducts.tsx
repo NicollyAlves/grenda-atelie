@@ -49,15 +49,19 @@ export default function AdminProducts() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const totalVariantStock = form.has_variants 
+        ? form.variants.reduce((sum, v) => sum + (parseInt(v.stock_quantity) || 0), 0)
+        : parseInt(form.stock_quantity) || 0;
+
       const payload = {
         name: form.name,
         description: form.description || null,
         price: parseFloat(form.price),
         category: form.category || null,
-        image_url: form.image_url || null,
-        additional_images: form.additional_images,
+        image_url: form.has_variants ? (form.variants[0]?.image_url || null) : (form.image_url || null),
+        additional_images: form.has_variants ? [] : form.additional_images,
         in_stock: form.in_stock,
-        stock_quantity: parseInt(form.stock_quantity) || 0,
+        stock_quantity: totalVariantStock,
         has_variants: form.has_variants,
       };
       
