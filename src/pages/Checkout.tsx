@@ -96,22 +96,27 @@ export default function Checkout() {
         toast.info('Para outras cidades, finalize seu pedido selecionando "Combine via Chat" para combinarmos o envio.');
         return;
       } else {
-        // Uber Moto Manaus - Baseado na distância da Compensa
+        // Simulação Realista Uber Moto (Base + Centavos + Margem de Segurança)
+        // Adicionamos R$ 1,50 de margem para o Ateliê não ter prejuízo com flutuações
+        const margin = 1.50;
+        const randomCents = Math.floor(Math.random() * 90 + 10) / 100; // Gera de ,10 a ,99
+        let baseFee = 15.00;
+
         if (neighborhood.includes('compensa') || neighborhood.includes('vila buriti') || neighborhood.includes('santo antônio')) {
-          setShippingFee(8.00);
-        } else if (neighborhood.includes('dom pedro') || neighborhood.includes('alvorada') || neighborhood.includes('planalto')) {
-          setShippingFee(12.00);
-        } else if (neighborhood.includes('centro') || neighborhood.includes('adrianopolis') || neighborhood.includes('vieiralves') || neighborhood.includes('aparecida')) {
-          setShippingFee(15.00);
+          baseFee = 8.00;
+        } else if (neighborhood.includes('dom pedro') || neighborhood.includes('alvorada') || neighborhood.includes('planalto') || neighborhood.includes('lírio do vale')) {
+          baseFee = 12.00;
+        } else if (neighborhood.includes('centro') || neighborhood.includes('adrianopolis') || neighborhood.includes('vieiralves') || neighborhood.includes('aparecida') || neighborhood.includes('praça 14')) {
+          baseFee = 15.00;
         } else if (neighborhood.includes('parque 10') || neighborhood.includes('aleixo') || neighborhood.includes('japiim') || neighborhood.includes('coroado') || neighborhood.includes('manoa')) {
-          setShippingFee(18.00);
+          baseFee = 18.00;
         } else if (neighborhood.includes('cidade nova') || neighborhood.includes('nova cidade') || neighborhood.includes('taruma') || neighborhood.includes('ponta negra')) {
-          setShippingFee(25.00); 
-        } else {
-          setShippingFee(15.00); 
+          baseFee = 25.00; 
         }
+
+        setShippingFee(baseFee + margin + randomCents);
       }
-      toast.success('Endereço e frete localizados!');
+      toast.success('Frete Uber Moto calculado com sucesso!');
     } catch (error) {
        toast.error('Erro ao buscar CEP.');
     } finally {
