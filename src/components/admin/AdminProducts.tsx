@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
-import { Plus, Trash2, Edit2, X, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, Minus, Check, Upload } from 'lucide-react';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { toast } from 'sonner';
 
@@ -188,16 +188,20 @@ export default function AdminProducts() {
                 <input placeholder="Categoria" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="input-styled" />
               </div>
 
+              {/* Checkbox de variações - estilizado */}
               <div className="bg-secondary/20 p-4 rounded-lg space-y-3 border border-border/50">
-                <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={form.has_variants} 
-                    onChange={e => setForm(f => ({ ...f, has_variants: e.target.checked }))} 
-                    className="rounded text-primary focus:ring-primary h-4 w-4" 
-                  />
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, has_variants: !f.has_variants }))}
+                  className="flex items-center gap-3 text-sm font-medium text-foreground cursor-pointer w-full"
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                    form.has_variants ? 'bg-primary border-primary' : 'border-border bg-background'
+                  }`}>
+                    {form.has_variants && <Check className="h-3 w-3 text-white" />}
+                  </div>
                   <span>Este produto possui variações (ex: cores diferentes)</span>
-                </label>
+                </button>
                 
                 {form.has_variants ? (
                   <div className="space-y-3 pt-2">
@@ -265,20 +269,44 @@ export default function AdminProducts() {
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div className="space-y-1">
                       <label className="text-[10px] text-muted-foreground">Estoque Geral</label>
-                      <input 
-                        placeholder="Qtd. estoque" 
-                        type="number" 
-                        min="0" 
-                        value={form.stock_quantity} 
-                        onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))} 
-                        className="input-styled py-1.5 h-auto text-sm" 
-                      />
+                      {/* Controle numérico customizado */}
+                      <div className="flex items-center border border-border rounded-lg overflow-hidden bg-background h-11">
+                        <button
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, stock_quantity: String(Math.max(0, parseInt(f.stock_quantity || '0') - 1)) }))}
+                          className="w-10 h-full flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex-shrink-0"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={form.stock_quantity}
+                          onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                          className="flex-1 text-center text-sm bg-transparent border-none focus:outline-none text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, stock_quantity: String(parseInt(f.stock_quantity || '0') + 1) }))}
+                          className="w-10 h-full flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex-shrink-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-end pb-3">
-                      <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                        <input type="checkbox" checked={form.in_stock} onChange={e => setForm(f => ({ ...f, in_stock: e.target.checked }))} className="rounded" />
+                    <div className="flex items-end pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, in_stock: !f.in_stock }))}
+                        className="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+                      >
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                          form.in_stock ? 'bg-primary border-primary' : 'border-border bg-background'
+                        }`}>
+                          {form.in_stock && <Check className="h-3 w-3 text-white" />}
+                        </div>
                         <span>Em estoque</span>
-                      </label>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -287,9 +315,23 @@ export default function AdminProducts() {
               {!form.has_variants && (
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-foreground block">Imagem Principal (Obrigatória se sem variantes)</label>
-                  <div className="flex items-center gap-4">
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true)} className="text-xs text-muted-foreground" />
-                    {form.image_url && <img src={form.image_url} className="w-12 h-12 rounded object-cover border" />}
+                  <div className="relative border-2 border-dashed border-border/50 rounded-xl p-4 hover:border-primary/40 transition-colors bg-background/40 cursor-pointer group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleImageUpload(e, true)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                    />
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Upload className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Clique para selecionar imagem</p>
+                        <p className="text-[10px] text-muted-foreground">PNG, JPG ou WEBP</p>
+                      </div>
+                      {form.image_url && <img src={form.image_url} className="w-12 h-12 rounded object-cover border ml-auto" />}
+                    </div>
                   </div>
                 </div>
               )}

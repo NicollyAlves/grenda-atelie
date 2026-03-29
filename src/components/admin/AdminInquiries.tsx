@@ -30,6 +30,13 @@ export default function AdminInquiries() {
           supabase.from('profiles').select('user_id, full_name, phone').in('user_id', userIds)
         ]);
 
+        // Marcar todas as dúvidas não lidas de clientes como lidas
+        const unread = inquiriesData.filter((i: any) => !i.is_read && !i.is_from_admin);
+        if (unread.length > 0) {
+          const ids = unread.map((i: any) => i.id);
+          await supabase.from('product_inquiries').update({ is_read: true } as any).in('id', ids);
+        }
+
         return inquiriesData.map(inquiry => ({
           ...inquiry,
           product: productsRes.data?.find(p => p.id === inquiry.product_id) || null,
@@ -113,6 +120,9 @@ export default function AdminInquiries() {
                         </span>
                         {thread.profile?.phone && (
                           <span className="text-[10px] text-muted-foreground/70">{thread.profile.phone}</span>
+                        )}
+                        {thread.messages.some((m: any) => !m.is_read && !m.is_from_admin) && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">Nova</span>
                         )}
                       </div>
                     </div>

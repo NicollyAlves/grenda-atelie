@@ -3,18 +3,24 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Filter, Calendar, DollarSign, Package, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../ui/ConfirmationModal';
 
 const statuses = ['aguardando_pagamento', 'pendente', 'em andamento', 'indo para entrega', 'concluido', 'recusado', 'cancelado'];
 
 export default function AdminOrders() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+
+  const markAsRead = async (orderId: string) => {
+    await supabase.from('orders').update({ is_read: true } as any).eq('id', orderId);
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+  };
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
@@ -139,10 +145,15 @@ export default function AdminOrders() {
         </div>
       ) : (
         filteredOrders.map((order: any) => (
-          <div key={order.id} className="card-product p-5">
+          <div key={order.id} className={`card-product p-5 transition-all ${!order.is_read ? 'border-l-4 border-l-primary' : ''}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div>
-                <p className="font-medium text-foreground">{order.profiles?.full_name || 'Cliente'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-foreground">{order.profiles?.full_name || 'Cliente'}</p>
+                  {!order.is_read && (
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">Novo</span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">{order.profiles?.phone || 'Sem telefone'}</p>
                 <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleString('pt-BR')}</p>
               </div>
@@ -209,9 +220,12 @@ export default function AdminOrders() {
               >
                 <Trash2 className="h-4 w-4" /> Excluir
               </button>
-              <Link to={`/pedido/${order.id}`} className="btn-hero text-sm px-4 py-2 inline-block">
+              <button
+                onClick={() => { markAsRead(order.id); navigate(`/pedido/${order.id}`); }}
+                className="btn-hero text-sm px-4 py-2 inline-block"
+              >
                 Acessar Pedido e Chat
-              </Link>
+              </button>
             </div>
           </div>
         ))

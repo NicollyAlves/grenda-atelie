@@ -3,11 +3,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CartDrawer from './CartDrawer';
+import { useUnreadAdmin } from '@/hooks/useUnreadAdmin';
 
 export default function Header() {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const unread = useUnreadAdmin();
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
@@ -48,8 +50,13 @@ export default function Header() {
                 <Settings className="h-3.5 w-3.5" /> Conta
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+                <Link to="/admin" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1 relative">
                   <LayoutDashboard className="h-4 w-4" /> Admin
+                  {unread.total > 0 && (
+                    <span className="absolute -top-2.5 -right-3.5 min-w-[18px] h-[18px] bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-in zoom-in duration-300 shadow-sm">
+                      {unread.total > 99 ? '99+' : unread.total}
+                    </span>
+                  )}
                 </Link>
               )}
               <button onClick={handleSignOut} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -90,7 +97,16 @@ export default function Header() {
             <>
               <Link to="/meus-pedidos" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Meus Pedidos</Link>
               <Link to="/minha-conta" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minha Conta</Link>
-              {isAdmin && <Link to="/admin" className="block text-lg font-medium text-primary" onClick={() => setMenuOpen(false)}>Painel Admin</Link>}
+              {isAdmin && (
+                <Link to="/admin" className="block text-lg font-medium text-primary flex items-center gap-2" onClick={() => setMenuOpen(false)}>
+                  Painel Admin
+                  {unread.total > 0 && (
+                    <span className="min-w-[20px] h-5 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                      {unread.total > 99 ? '99+' : unread.total}
+                    </span>
+                  )}
+                </Link>
+              )}
               <button onClick={() => { handleSignOut(); setMenuOpen(false); }} className="block text-lg font-medium text-destructive mt-4">Sair da Conta</button>
             </>
           ) : (
