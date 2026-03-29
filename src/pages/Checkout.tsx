@@ -96,25 +96,32 @@ export default function Checkout() {
         toast.info('Para outras cidades, finalize seu pedido selecionando "Combine via Chat" para combinarmos o envio.');
         return;
       } else {
-        // Simulação Realista Uber Moto (Base + Centavos + Margem de Segurança)
-        // Adicionamos R$ 1,50 de margem para o Ateliê não ter prejuízo com flutuações
-        const margin = 1.50;
-        const randomCents = Math.floor(Math.random() * 90 + 10) / 100; // Gera de ,10 a ,99
-        let baseFee = 15.00;
+        // FÓRMULA CALIBRADA UBER MOTO (MANAUS) - MAPEAMENTO COMPLETO
+        const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const nbh = normalize(neighborhood);
+        
+        const hour = new Date().getHours();
+        const isPeak = hour >= 17 && hour <= 19; 
+        const margin = 1.50; 
+        const randomCents = Math.floor(Math.random() * 80 + 10) / 100;
+        
+        let kmEstimate = 11; // Distância média de Manaus como fallback
 
-        if (neighborhood.includes('compensa') || neighborhood.includes('vila buriti') || neighborhood.includes('santo antônio')) {
-          baseFee = 8.00;
-        } else if (neighborhood.includes('dom pedro') || neighborhood.includes('alvorada') || neighborhood.includes('planalto') || neighborhood.includes('lírio do vale')) {
-          baseFee = 12.00;
-        } else if (neighborhood.includes('centro') || neighborhood.includes('adrianopolis') || neighborhood.includes('vieiralves') || neighborhood.includes('aparecida') || neighborhood.includes('praça 14')) {
-          baseFee = 15.00;
-        } else if (neighborhood.includes('parque 10') || neighborhood.includes('aleixo') || neighborhood.includes('japiim') || neighborhood.includes('coroado') || neighborhood.includes('manoa')) {
-          baseFee = 18.00;
-        } else if (neighborhood.includes('cidade nova') || neighborhood.includes('nova cidade') || neighborhood.includes('taruma') || neighborhood.includes('ponta negra')) {
-          baseFee = 25.00; 
-        }
+        if (nbh.match(/compensa|santo antonio|vila buriti|gloria|sao jorge/)) kmEstimate = 2;
+        else if (nbh.match(/sao raimundo|aparecida|centro|presidente vargas|matinha/)) kmEstimate = 4;
+        else if (nbh.match(/adrianopolis|vieiralves|praca 14|cachoeirinha|nossa senhora das gracas|chapada|dom pedro|santo agostinho/)) kmEstimate = 6.5;
+        else if (nbh.match(/parque 10|aleixo|alvorada|planalto|redencao|lirio do vale|ponta negra|taruma|flores/)) kmEstimate = 9.5;
+        else if (nbh.match(/japiim|coroado|petropolis|sao jose|sao francisco|raiz|educandos|betania|crespo/)) kmEstimate = 12.5;
+        else if (nbh.match(/cidade nova|manoa|novo israel|colonia terra nova|monte das oliveiras|santa etelvina|zumbi|armando mendes|tancredo neves/)) kmEstimate = 15.5;
+        else if (nbh.match(/jorge teixeira|nova cidade|cidade de deus|puraquequara|mauazinho/)) kmEstimate = 19;
 
-        setShippingFee(baseFee + margin + randomCents);
+        const baseRate = 4.00; // Taxa base Uber
+        const kmRate = 1.05;   // Preço por KM calibrado ( Adrianópolis = ~12,94 )
+        
+        let deliveryPrice = baseRate + (kmEstimate * kmRate) + margin;
+        if (isPeak) deliveryPrice *= 1.15; // +15% se for horário de pico
+
+        setShippingFee(deliveryPrice + randomCents);
       }
       toast.success('Frete Uber Moto calculado com sucesso!');
     } catch (error) {
