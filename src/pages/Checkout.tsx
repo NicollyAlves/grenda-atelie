@@ -90,13 +90,11 @@ export default function Checkout() {
 
       const neighborhood = (data.bairro || '').toLowerCase();
       
-      if (data.uf !== 'AM') {
-        // Envio para fora do AM - Geralmente via Correios (Melhor Envio)
-        // Definimos um valor base, mas avisamos que pode variar
-        setShippingFee(48.50);
-        toast.info('Para entregas fora do Amazonas, o valor do frete é uma estimativa via Correios.');
-      } else if (data.localidade !== 'Manaus') {
-        setShippingFee(28.00);
+      if (data.localidade !== 'Manaus' || data.uf !== 'AM') {
+        setShippingFee(null);
+        toast.error('No momento, as entregas automáticas via Uber Moto estão disponíveis apenas para Manaus/AM.');
+        toast.info('Para outras cidades, finalize seu pedido selecionando "Combine via Chat" para combinarmos o envio.');
+        return;
       } else {
         // Uber Moto Manaus - Baseado na distância da Compensa
         if (neighborhood.includes('compensa') || neighborhood.includes('vila buriti') || neighborhood.includes('santo antônio')) {
