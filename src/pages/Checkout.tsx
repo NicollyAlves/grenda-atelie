@@ -170,26 +170,46 @@ export default function Checkout() {
   };
 
   const copyPix = () => {
-    // Gerador Simples de BRCode PIX (Padrão BACEN)
-    // Chave CPF: 30909260249
-    const amountStr = total.toFixed(2).replace('.', '');
-    const amountLen = amountStr.length.toString().padStart(2, '0');
+    // Dados para o Pix (Grenda Oliveira)
+    const pixKey = "30909260249"; 
+    const merchantName = "Grenda Oliveira";
+    const merchantCity = "MANAUS";
+    const amount = total.toFixed(2);
     
-    // Payload Estruturado (Simplificado para Mock funcional de Copy/Paste)
-    // 000201: Versão
-    // 26: Info da Conta
-    // 52040000: MCC
-    // 5303986: Moeda (986 = Real)
-    // 54: Valor (54 + tam + valor)
-    // 5802BR: País
-    // 59: Nome (59 + tam + nome)
-    // 60: Cidade (60 + tam + cidade)
-    // 6304: CRC
+    // Função para calcular CRC16 CCITT (0xFFFF) - Padrão BACEN
+    const getCRC16 = (data: string) => {
+      let crc = 0xFFFF;
+      for (let i = 0; i < data.length; i++) {
+        crc ^= data.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          if (crc & 0x8000) {
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+          } else {
+            crc = (crc << 1) & 0xFFFF;
+          }
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    };
+
+    // Montagem do Payload EMV Pix (Campos Obrigatórios)
+    const part1 = "000201"; // Payload Format Indicator
+    const part2 = `26330014br.gov.bcb.pix0111${pixKey}`; // Merchant Account Information
+    const part3 = "52040000"; // Merchant Category Code
+    const part4 = "5303986"; // Transaction Currency (986 = BRL)
+    const part5 = `54${amount.length.toString().padStart(2, '0')}${amount}`; // Transaction Amount
+    const part6 = "5802BR"; // Country Code
+    const part7 = `59${merchantName.length.toString().padStart(2, '0')}${merchantName}`; // Merchant Name
+    const part8 = `60${merchantCity.length.toString().padStart(2, '0')}${merchantCity}`; // Merchant City
+    const part9 = "62070503***"; // Additional Data Field (TXID vazio)
+    const part10 = "6304"; // CRC16 Indicator
+
+    const fullPayloadWithoutCRC = part1 + part2 + part3 + part4 + part5 + part6 + part7 + part8 + part9 + part10;
+    const crc = getCRC16(fullPayloadWithoutCRC);
+    const finalPayload = fullPayloadWithoutCRC + crc;
     
-    const pixPayload = `00020126330014br.gov.bcb.pix01113090926024952040000530398654${amountLen}${total.toFixed(2)}5802BR5915GrendaOliveira6006MANAUS62070503***6304`;
-    
-    navigator.clipboard.writeText(pixPayload);
-    toast.success('Código PIX Copia e Cola gerado com o valor de R$ ' + total.toFixed(2));
+    navigator.clipboard.writeText(finalPayload);
+    toast.success('Pix Copia e Cola gerado para R$ ' + amount);
   };
 
   const handleFinishOrder = async () => {
