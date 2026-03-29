@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Send, Image as ImageIcon, Video, Paperclip, X, Loader2 } from 'lucide-react';
+import { Send, Paperclip, X, Loader2, Video, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
@@ -20,11 +20,13 @@ export default function OrderChat({ orderId }: { orderId: string }) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string; type: 'image' | 'video' }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    if (scrollRef.current) {
+  const scrollToBottom = (force = false) => {
+    if (scrollRef.current && (isAtBottom || force)) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
         behavior: 'smooth'
@@ -32,11 +34,15 @@ export default function OrderChat({ orderId }: { orderId: string }) {
     }
   };
 
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    setIsAtBottom(scrollHeight - scrollTop - clientHeight < 60);
+  };
+
   useEffect(() => {
-    if (!loading) {
-      scrollToBottom();
-    }
-  }, [messages, loading]);
+    if (!loading) scrollToBottom();
+  }, [loading]);
 
   useEffect(() => {
     fetchMessages();
@@ -50,8 +56,18 @@ export default function OrderChat({ orderId }: { orderId: string }) {
       }, (payload) => {
         setMessages(prev => {
           if (prev.find(m => m.id === payload.new.id)) return prev;
+          const isFromMe = payload.new.user_id === user?.id;
+          // Se a mensagem não é minha e não estou no fim da tela, incrementa badge
+          if (!isFromMe) {
+            setIsAtBottom(prev2 => {
+              if (!prev2) setUnreadCount(c => c + 1);
+              return prev2;
+            });
+          }
           return [...prev, payload.new as Message];
         });
+        // Scroll automático só se já estava no fundo
+        setTimeout(() => scrollToBottom(), 50);
       })
       .subscribe();
 
@@ -70,6 +86,12 @@ export default function OrderChat({ orderId }: { orderId: string }) {
         
       if (!error && data) {
         setMessages(data);
+        // Marcar como lidas todas as mensagens do outro lado
+        const unread = data.filter(m => m.user_id !== user?.id);
+        if (unread.length > 0) {
+          const ids = unread.map(m => m.id);
+          await supabase.from('order_messages').update({ is_read: true } as any).in('id', ids);
+        }
       }
     } finally {
       setLoading(false);
@@ -155,17 +177,43 @@ export default function OrderChat({ orderId }: { orderId: string }) {
     }
   };
 
+  // Formata a data/hora completa da mensagem
+  const formatMsgDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    if (d.toDateString() === today.toDateString()) return `Hoje, ${time}`;
+    if (d.toDateString() === yesterday.toDateString()) return `Ontem, ${time}`;
+    return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}, ${time}`;
+  };
+
   if (loading) return <div className="text-center text-sm p-4">Carregando chat...</div>;
 
   return (
     <div className="flex flex-col h-[500px] border border-border rounded-lg bg-card shadow-soft overflow-hidden">
-      <div className="p-4 border-b border-border bg-muted/30">
-        <h3 className="font-display font-medium text-foreground">Chat do Pedido</h3>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Converse com o {isAdmin ? 'Cliente' : 'Ateliê'}</p>
+      <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div>
+          <h3 className="font-display font-medium text-foreground">Chat do Pedido</h3>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Converse com o {isAdmin ? 'Cliente' : 'Ateliê'}</p>
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={() => { scrollToBottom(true); setUnreadCount(0); }}
+            className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full animate-bounce shadow-md"
+          >
+            {unreadCount} nova{unreadCount > 1 ? 's' : ''} mensagem{unreadCount > 1 ? 'ns' : ''}
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div 
         ref={scrollRef}
+        onScroll={handleScroll}
         className="flex-1 p-4 overflow-y-auto space-y-4 scroll-smooth bg-muted/5"
       >
         {messages.length === 0 ? (
@@ -199,8 +247,8 @@ export default function OrderChat({ orderId }: { orderId: string }) {
                     </div>
                   )}
 
-                  <p className={`text-[9px] mt-1.5 font-medium uppercase opacity-70 ${isMe ? 'text-right' : 'text-left'}`}>
-                    {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  <p className={`text-[9px] mt-1.5 font-medium uppercase opacity-60 ${isMe ? 'text-right' : 'text-left'}`}>
+                    {formatMsgDate(msg.created_at)}
                   </p>
                 </div>
               </div>

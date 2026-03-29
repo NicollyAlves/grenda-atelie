@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Package, Search, Calendar, Filter } from 'lucide-react';
+import { Package, Search, Calendar, Filter, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useUnreadChatOrders } from '@/hooks/useUnreadChatOrders';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ const statusColors: Record<string, string> = {
 export default function MyOrders() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const unreadOrders = useUnreadChatOrders();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['my-orders', user?.id],
@@ -107,6 +109,13 @@ export default function MyOrders() {
         <div className="grid gap-6">
           {filteredOrders.map(order => (
             <Link key={order.id} to={`/pedido/${order.id}`} className="block card-product p-5 md:p-6 hover:border-primary/40 transition-all hover:shadow-lg group relative overflow-hidden">
+              {/* Badge de nova mensagem do ateliê */}
+              {unreadOrders.has(order.id) && (
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md animate-pulse z-10">
+                  <MessageCircle className="h-3 w-3" />
+                  Nova mensagem do Ateliê!
+                </div>
+              )}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Pedido #{order.id.slice(0, 8)}</span>

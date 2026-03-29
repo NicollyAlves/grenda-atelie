@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Filter, Calendar, DollarSign, Package, Trash2 } from 'lucide-react';
+import { Search, Filter, Calendar, DollarSign, Package, Trash2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import { useUnreadChatOrders } from '@/hooks/useUnreadChatOrders';
 
 const statuses = ['aguardando_pagamento', 'pendente', 'em andamento', 'indo para entrega', 'concluido', 'recusado', 'cancelado'];
 
 export default function AdminOrders() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const unreadOrders = useUnreadChatOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -154,13 +156,18 @@ export default function AdminOrders() {
         </div>
       ) : (
         filteredOrders.map((order: any) => (
-          <div key={order.id} className={`card-product p-5 transition-all ${!order.is_read ? 'border-l-4 border-l-primary' : ''}`}>
+          <div key={order.id} className={`card-product p-5 transition-all relative ${!order.is_read ? 'border-l-4 border-l-primary' : ''}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium text-foreground">{order.profiles?.full_name || 'Cliente'}</p>
                   {!order.is_read && (
                     <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">Novo</span>
+                  )}
+                  {unreadOrders.has(order.id) && (
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">
+                      <MessageCircle className="h-3 w-3" /> Msg do cliente
+                    </span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">{order.profiles?.phone || 'Sem telefone'}</p>
