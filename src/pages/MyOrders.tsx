@@ -113,7 +113,7 @@ export default function MyOrders() {
               {unreadOrders.has(order.id) && (
                 <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md animate-pulse z-10">
                   <MessageCircle className="h-3 w-3" />
-                  Nova mensagem do Ateliê!
+                  Nova mensagem
                 </div>
               )}
               <div className="flex items-center justify-between mb-4">

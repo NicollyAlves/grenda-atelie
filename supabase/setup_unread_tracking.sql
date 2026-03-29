@@ -36,3 +36,14 @@ CREATE POLICY "Admins can mark inquiries as read" ON public.product_inquiries FO
 DROP POLICY IF EXISTS "Admins can mark messages as read" ON public.order_messages;
 CREATE POLICY "Admins can mark messages as read" ON public.order_messages FOR UPDATE
   USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- 7. Permitir que usuários marquem como lidas as mensagens dos pedidos DELES
+DROP POLICY IF EXISTS "Users can mark their order messages as read" ON public.order_messages;
+CREATE POLICY "Users can mark their order messages as read" ON public.order_messages FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.orders 
+      WHERE orders.id = order_messages.order_id 
+      AND orders.user_id = auth.uid()
+    )
+  );

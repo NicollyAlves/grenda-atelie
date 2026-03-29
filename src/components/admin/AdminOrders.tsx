@@ -166,7 +166,7 @@ export default function AdminOrders() {
                   )}
                   {unreadOrders.has(order.id) && (
                     <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">
-                      <MessageCircle className="h-3 w-3" /> Msg do cliente
+                      <MessageCircle className="h-3 w-3" /> Nova mensagem
                     </span>
                   )}
                 </div>
