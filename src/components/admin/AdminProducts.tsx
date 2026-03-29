@@ -144,12 +144,32 @@ export default function AdminProducts() {
   };
 
   const openEdit = async (p: any) => {
-    // Fetch variants if they exist
     let pVariants: any[] = [];
     if (p.has_variants) {
       const { data } = await supabase.from('product_variants').select('*').eq('product_id', p.id);
       pVariants = data || [];
     }
+
+    const existingImageUrls = Array.from(
+      new Set(
+        [
+          p.image_url,
+          ...(p.additional_images || []),
+          ...pVariants.map(v => v.image_url),
+        ].filter(Boolean)
+      )
+    ) as string[];
+
+    const hydratedVariants = p.has_variants
+      ? existingImageUrls.map((imageUrl) => {
+          const existingVariant = pVariants.find(v => v.image_url === imageUrl);
+          return {
+            id: existingVariant?.id,
+            image_url: imageUrl,
+            stock_quantity: String(existingVariant?.stock_quantity ?? 0),
+          };
+        })
+      : [];
 
     setForm({
       name: p.name,
@@ -161,7 +181,7 @@ export default function AdminProducts() {
       in_stock: p.in_stock,
       stock_quantity: String(p.stock_quantity ?? 0),
       has_variants: p.has_variants || false,
-      variants: pVariants.map(v => ({ id: v.id, image_url: v.image_url, stock_quantity: String(v.stock_quantity) }))
+      variants: hydratedVariants,
     });
     setEditId(p.id);
     setShowForm(true);
