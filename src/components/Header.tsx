@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings } from 'lucide-react';
+import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CartDrawer from './CartDrawer';
 import { useUnreadAdmin } from '@/hooks/useUnreadAdmin';
@@ -46,6 +46,9 @@ export default function Header() {
           {user ? (
             <>
               <Link to="/meus-pedidos" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Meus Pedidos</Link>
+              <Link to="/minhas-duvidas" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <MessageCircle className="h-3.5 w-3.5" /> Dúvidas
+              </Link>
               <Link to="/minha-conta" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                 <Settings className="h-3.5 w-3.5" /> Conta
               </Link>
@@ -96,6 +99,7 @@ export default function Header() {
           {user ? (
             <>
               <Link to="/meus-pedidos" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Meus Pedidos</Link>
+              <Link to="/minhas-duvidas" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minhas Dúvidas</Link>
               <Link to="/minha-conta" className="block text-lg font-medium text-foreground" onClick={() => setMenuOpen(false)}>Minha Conta</Link>
               {isAdmin && (
                 <Link to="/admin" className="block text-lg font-medium text-primary flex items-center gap-2" onClick={() => setMenuOpen(false)}>
