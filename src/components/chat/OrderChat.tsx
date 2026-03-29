@@ -85,7 +85,7 @@ export default function OrderChat({ orderId }: { orderId: string }) {
         .order('created_at', { ascending: true });
         
       if (!error && data) {
-        setMessages(data);
+        setMessages(data.map(m => ({ ...m, attachments: Array.isArray(m.attachments) ? m.attachments as { url: string; type: "image" | "video" }[] : [] })));
         // Marcar como lidas todas as mensagens do outro lado
         const unread = data.filter(m => m.user_id !== user?.id);
         if (unread.length > 0) {
