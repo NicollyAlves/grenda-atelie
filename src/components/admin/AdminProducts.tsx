@@ -134,7 +134,7 @@ export default function AdminProducts() {
       if (error) { toast.error('Erro ao enviar imagem'); continue; }
       const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
       
-      if (isMain && !form.image_url) {
+      if (isMain) {
         setForm(f => ({ ...f, image_url: urlData.publicUrl }));
       } else {
         setForm(f => ({ ...f, additional_images: [...f.additional_images, urlData.publicUrl] }));
