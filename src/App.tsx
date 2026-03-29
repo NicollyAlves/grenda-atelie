@@ -17,6 +17,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import OrderDetail from "./pages/OrderDetail";
+import MyInquiries from "./pages/MyInquiries";
 
 const queryClient = new QueryClient();
 
