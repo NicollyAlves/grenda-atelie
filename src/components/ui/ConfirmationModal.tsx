@@ -44,31 +44,34 @@ export default function ConfirmationModal({
   const config = typeConfig[type];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-foreground/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
       <div 
-        className="bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-border/50 animate-in zoom-in-95 duration-200"
+        className="bg-background/95 rounded-3xl p-8 w-full max-w-sm shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-border/40 animate-in zoom-in-95 duration-300 relative overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className={`p-3 rounded-full ${config.iconBg}`}>
+        {/* Abstract background highlight */}
+        <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 blur-3xl ${type === 'danger' ? 'bg-destructive' : 'bg-primary'}`} />
+        
+        <div className="flex flex-col items-center text-center space-y-6">
+          <div className={`p-4 rounded-2xl ${config.iconBg} shadow-inner`}>
             {config.icon}
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-xl font-display font-bold text-foreground">{title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+          <div className="space-y-3">
+            <h3 className="text-2xl font-display font-medium text-foreground tracking-tight">{title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed px-2 font-medium">{message}</p>
           </div>
 
-          <div className="flex flex-col w-full gap-2 pt-2">
+          <div className="flex flex-col w-full gap-3 pt-4">
             <button 
               onClick={onConfirm}
-              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] ${config.btnClass}`}
+              className={`w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 active:scale-[0.97] shadow-lg shadow-black/20 ${config.btnClass}`}
             >
               {confirmText}
             </button>
             <button 
               onClick={onCancel}
-              className="w-full py-3 rounded-xl font-semibold text-sm border border-border/50 text-muted-foreground hover:bg-muted/50 transition-all active:scale-[0.98]"
+              className="w-full py-4 rounded-2xl font-bold text-sm border border-border/50 text-muted-foreground hover:bg-muted/30 transition-all duration-300 active:scale-[0.97]"
             >
               {cancelText}
             </button>

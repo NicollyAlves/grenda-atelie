@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Send } from 'lucide-react';
+import { Send, Image as ImageIcon, Video, Paperclip, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
@@ -9,6 +9,7 @@ interface Message {
   order_id: string;
   user_id: string;
   message: string;
+  attachments?: { url: string; type: 'image' | 'video' }[];
   created_at: string;
 }
 
@@ -17,7 +18,10 @@ export default function OrderChat({ orderId }: { orderId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string; type: 'image' | 'video' }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -44,7 +48,10 @@ export default function OrderChat({ orderId }: { orderId: string }) {
         table: 'order_messages',
         filter: `order_id=eq.${orderId}`
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new as Message]);
+        setMessages(prev => {
+          if (prev.find(m => m.id === payload.new.id)) return prev;
+          return [...prev, payload.new as Message];
+        });
       })
       .subscribe();
 
@@ -69,59 +76,130 @@ export default function OrderChat({ orderId }: { orderId: string }) {
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !user) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const newPending = files.map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+        type: file.type.startsWith('video/') ? 'video' as const : 'image' as const
+      }));
+      setPendingFiles(prev => [...prev, ...newPending]);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-    const msg = newMessage;
-    setNewMessage(''); // optimistic reset
+  const removePending = (index: number) => {
+    setPendingFiles(prev => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].preview);
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
 
-    const { data: insertedMsg, error } = await supabase.from('order_messages').insert({
-      order_id: orderId,
-      user_id: user.id,
-      message: msg.trim()
-    }).select().single();
+  const uploadFiles = async () => {
+    const attachments: { url: string; type: 'image' | 'video' }[] = [];
     
-    if (!error && insertedMsg) {
-       // Only add if not already added by subscription to avoid duplicates
-       setMessages(prev => {
-         if (prev.find(m => m.id === insertedMsg.id)) return prev;
-         return [...prev, insertedMsg];
-       });
+    for (const item of pendingFiles) {
+      const fileExt = item.file.name.split('.').pop();
+      const fileName = `${orderId}/${Math.random()}.${fileExt}`;
+      const filePath = `chat/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, item.file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      attachments.push({ url: publicUrl, type: item.type });
     }
     
-    if (error) {
+    return attachments;
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if ((!newMessage.trim() && pendingFiles.length === 0) || !user) return;
+
+    const msgText = newMessage;
+    const filesToUpload = [...pendingFiles];
+    
+    setUploading(true);
+    setNewMessage('');
+    setPendingFiles([]);
+
+    try {
+      const attachments = await uploadFiles();
+
+      const { data: insertedMsg, error } = await supabase.from('order_messages').insert({
+        order_id: orderId,
+        user_id: user.id,
+        message: msgText.trim(),
+        attachments: attachments
+      }).select().single();
+      
+      if (error) throw error;
+      
+    } catch (error) {
       console.error('Chat send error:', error);
-      toast.error('Erro ao enviar mensagem. Tem certeza que o chat está liberado?');
-      setNewMessage(msg); // revert
+      toast.error('Erro ao enviar mensagem ou mídia.');
+      setNewMessage(msgText);
+      setPendingFiles(filesToUpload);
+    } finally {
+      setUploading(false);
     }
   };
 
   if (loading) return <div className="text-center text-sm p-4">Carregando chat...</div>;
 
   return (
-    <div className="flex flex-col h-[400px] border border-border rounded-lg bg-card">
-      <div className="p-4 border-b border-border bg-muted/50 rounded-t-lg">
-        <h3 className="font-medium text-foreground">Chat do Pedido</h3>
-        <p className="text-xs text-muted-foreground">Converse com o {isAdmin ? 'Cliente' : 'Ateliê'}</p>
+    <div className="flex flex-col h-[500px] border border-border rounded-lg bg-card shadow-soft overflow-hidden">
+      <div className="p-4 border-b border-border bg-muted/30">
+        <h3 className="font-display font-medium text-foreground">Chat do Pedido</h3>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Converse com o {isAdmin ? 'Cliente' : 'Ateliê'}</p>
       </div>
 
       <div 
         ref={scrollRef}
-        className="flex-1 p-4 overflow-y-auto space-y-4 scroll-smooth"
+        className="flex-1 p-4 overflow-y-auto space-y-4 scroll-smooth bg-muted/5"
       >
         {messages.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground mt-10">
-            Nenhuma mensagem ainda. Escreva detalhes, dúvidas ou atualizações sobre o seu pedido aqui.
+          <p className="text-center text-sm text-muted-foreground mt-10 px-10">
+            Nenhuma mensagem ainda. Escreva detalhes, envie fotos ou vídeos sobre seu pedido aqui.
           </p>
         ) : (
           messages.map(msg => {
             const isMe = msg.user_id === user?.id;
             return (
-              <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-lg text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-muted text-foreground rounded-tl-none'}`}>
-                  <p>{msg.message}</p>
-                  <p className={`text-[10px] mt-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-card text-foreground rounded-tl-none border border-border/50'}`}>
+                  {msg.message && <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>}
+                  
+                  {msg.attachments && msg.attachments.length > 0 && (
+                    <div className={`grid gap-2 mt-2 ${msg.attachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                      {msg.attachments.map((at, i) => (
+                        <div key={i} className="rounded-lg overflow-hidden border border-white/10 aspect-square bg-black/20">
+                          {at.type === 'video' ? (
+                            <video src={at.url} controls className="w-full h-full object-cover" />
+                          ) : (
+                            <img 
+                              src={at.url} 
+                              alt="Anexo" 
+                              className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" 
+                              onClick={() => window.open(at.url, '_blank')}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className={`text-[9px] mt-1.5 font-medium uppercase opacity-70 ${isMe ? 'text-right' : 'text-left'}`}>
                     {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -131,18 +209,65 @@ export default function OrderChat({ orderId }: { orderId: string }) {
         )}
       </div>
 
-      <form onSubmit={sendMessage} className="p-3 border-t border-border flex gap-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={e => setNewMessage(e.target.value)}
-          placeholder="Digite sua mensagem..."
-          className="input-styled flex-1"
-        />
-        <button type="submit" disabled={!newMessage.trim()} className="btn-hero px-4 flex items-center justify-center">
-          <Send className="h-4 w-4" />
-        </button>
+      {pendingFiles.length > 0 && (
+        <div className="p-3 bg-muted/50 border-t border-border flex gap-2 overflow-x-auto">
+          {pendingFiles.map((item, i) => (
+            <div key={i} className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-primary/30 shadow-sm">
+              {item.type === 'video' ? (
+                <div className="w-full h-full bg-slate-900 flex items-center justify-center"><Video className="h-6 w-6 text-white" /></div>
+              ) : (
+                <img src={item.preview} className="w-full h-full object-cover" />
+              )}
+              <button 
+                onClick={() => removePending(i)}
+                className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5 text-white hover:bg-destructive transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={sendMessage} className="p-3 border-t border-border bg-card flex flex-col gap-2">
+        <div className="flex gap-2 items-end">
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*,video/*"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <button 
+            type="button" 
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground transition-all active:scale-95"
+            title="Anexar Fotos ou Vídeos"
+          >
+            <Paperclip className="h-5 w-5" />
+          </button>
+          
+          <div className="flex-1 relative">
+            <textarea
+              value={newMessage}
+              onChange={e => setNewMessage(e.target.value)}
+              placeholder="Digite sua mensagem..."
+              className="input-styled py-3 px-4 min-h-[48px] max-h-32 resize-none"
+              rows={1}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={(!newMessage.trim() && pendingFiles.length === 0) || uploading} 
+            className="btn-hero p-3 flex items-center justify-center rounded-xl shadow-lg active:scale-95 disabled:grayscale"
+          >
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </button>
+        </div>
       </form>
     </div>
   );
 }
+

@@ -113,7 +113,7 @@ export default function AdminProducts() {
     },
     onError: (err: any) => {
       console.error(err);
-      toast.error('Erro ao excluir: verifique se há pedidos vinculados a este produto.');
+      toast.error('Erro ao excluir: verifique se há pedidos vinculados a este produto. Converse com o usuário que pediu o produto, caso ele não esteja mais disponível no catálogo.');
       setProductToDelete(null);
     }
   });
