@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Filter, Calendar, DollarSign, Package, Trash2 } from 'lucide-react';
@@ -21,6 +21,15 @@ export default function AdminOrders() {
     await supabase.from('orders').update({ is_read: true } as any).eq('id', orderId);
     queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
   };
+
+  // Marcar todos como lidos ao abrir a aba de pedidos
+  useEffect(() => {
+    const markAllAsRead = async () => {
+      await supabase.from('orders').update({ is_read: true } as any).filter('is_read', 'eq', 'false');
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+    };
+    markAllAsRead();
+  }, []);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
