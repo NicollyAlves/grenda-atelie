@@ -46,6 +46,9 @@ export default function Header() {
           {user ? (
             <>
               <Link to="/meus-pedidos" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Meus Pedidos</Link>
+              <Link to="/minhas-duvidas" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <MessageCircle className="h-3.5 w-3.5" /> Dúvidas
+              </Link>
               <Link to="/minha-conta" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                 <Settings className="h-3.5 w-3.5" /> Conta
               </Link>
