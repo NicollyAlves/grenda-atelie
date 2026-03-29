@@ -26,7 +26,7 @@ export default function Admin() {
         >
           <Package className="h-4 w-4" /> Pedidos
           {unread.orders > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
+            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
               {unread.orders > 99 ? '99+' : unread.orders}
             </span>
           )}
@@ -43,7 +43,7 @@ export default function Admin() {
         >
           <MessageSquare className="h-4 w-4" /> Dúvidas
           {unread.inquiries > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
+            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
               {unread.inquiries > 99 ? '99+' : unread.inquiries}
             </span>
           )}

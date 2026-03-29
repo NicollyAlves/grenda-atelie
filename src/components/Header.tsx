@@ -53,7 +53,7 @@ export default function Header() {
                 <Link to="/admin" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1 relative">
                   <LayoutDashboard className="h-4 w-4" /> Admin
                   {unread.total > 0 && (
-                    <span className="absolute -top-2.5 -right-3.5 min-w-[18px] h-[18px] bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-in zoom-in duration-300 shadow-sm">
+                    <span className="absolute -top-2.5 -right-3.5 min-w-[18px] h-[18px] bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-in zoom-in duration-300 shadow-md">
                       {unread.total > 99 ? '99+' : unread.total}
                     </span>
                   )}
@@ -101,7 +101,7 @@ export default function Header() {
                 <Link to="/admin" className="block text-lg font-medium text-primary flex items-center gap-2" onClick={() => setMenuOpen(false)}>
                   Painel Admin
                   {unread.total > 0 && (
-                    <span className="min-w-[20px] h-5 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    <span className="min-w-[20px] h-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
                       {unread.total > 99 ? '99+' : unread.total}
                     </span>
                   )}
