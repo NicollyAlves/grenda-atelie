@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings } from 'lucide-react';
+import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, X, Moon, Sun, Settings, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CartDrawer from './CartDrawer';
 import { useUnreadAdmin } from '@/hooks/useUnreadAdmin';
