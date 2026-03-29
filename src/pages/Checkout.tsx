@@ -88,13 +88,30 @@ export default function Checkout() {
         state: data.uf || 'AM'
       }));
 
-      // Base calculation logic (keeping our simplified version for now)
+      const neighborhood = (data.bairro || '').toLowerCase();
+      
       if (data.uf !== 'AM') {
-        setShippingFee(45.00);
+        // Envio para fora do AM - Geralmente via Correios (Melhor Envio)
+        // Definimos um valor base, mas avisamos que pode variar
+        setShippingFee(48.50);
+        toast.info('Para entregas fora do Amazonas, o valor do frete é uma estimativa via Correios.');
       } else if (data.localidade !== 'Manaus') {
-        setShippingFee(25.00);
+        setShippingFee(28.00);
       } else {
-        setShippingFee(15.00); // Standard local fee
+        // Uber Moto Manaus - Baseado na distância da Compensa
+        if (neighborhood.includes('compensa') || neighborhood.includes('vila buriti') || neighborhood.includes('santo antônio')) {
+          setShippingFee(8.00);
+        } else if (neighborhood.includes('dom pedro') || neighborhood.includes('alvorada') || neighborhood.includes('planalto')) {
+          setShippingFee(12.00);
+        } else if (neighborhood.includes('centro') || neighborhood.includes('adrianopolis') || neighborhood.includes('vieiralves') || neighborhood.includes('aparecida')) {
+          setShippingFee(15.00);
+        } else if (neighborhood.includes('parque 10') || neighborhood.includes('aleixo') || neighborhood.includes('japiim') || neighborhood.includes('coroado') || neighborhood.includes('manoa')) {
+          setShippingFee(18.00);
+        } else if (neighborhood.includes('cidade nova') || neighborhood.includes('nova cidade') || neighborhood.includes('taruma') || neighborhood.includes('ponta negra')) {
+          setShippingFee(25.00); 
+        } else {
+          setShippingFee(15.00); 
+        }
       }
       toast.success('Endereço e frete localizados!');
     } catch (error) {
@@ -329,35 +346,70 @@ export default function Checkout() {
           </div>
 
           <div className="card-product p-6 space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Forma de Pagamento</h2>
-            <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === 'pix' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                <input type="radio" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="accent-primary" />
-                <QrCode className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">Pix</span>
+            <h2 className="text-xl font-semibold mb-2">Forma de Pagamento</h2>
+            <div className="grid gap-3">
+              <label 
+                className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 group ${
+                  paymentMethod === 'pix' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-border/50 hover:border-primary/30'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${paymentMethod === 'pix' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                  <QrCode className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="font-bold block text-foreground">Pix</span>
+                  <p className="text-[10px] text-muted-foreground">Aprovação imediata e 100% segura</p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'pix' ? 'border-primary bg-primary' : 'border-border'}`}>
+                  {paymentMethod === 'pix' && <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in" />}
+                </div>
+                <input type="radio" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="hidden" />
               </label>
-              
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentMethod === 'cartao' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                <input type="radio" value="cartao" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} className="accent-primary" />
-                <CreditCard className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">Cartão de Crédito</span>
+
+              <label 
+                className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 group ${
+                  paymentMethod === 'cartao' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-border/50 hover:border-primary/30'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${paymentMethod === 'cartao' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="font-bold block text-foreground">Cartão de Crédito</span>
+                  <p className="text-[10px] text-muted-foreground">Simulação em ambiente protegido</p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cartao' ? 'border-primary bg-primary' : 'border-border'}`}>
+                  {paymentMethod === 'cartao' && <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in" />}
+                </div>
+                <input type="radio" value="cartao" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} className="hidden" />
               </label>
               
               {orderType === 'retirada' && (
-                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all animate-in zoom-in duration-300 ${paymentMethod === 'dinheiro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                  <input type="radio" value="dinheiro" checked={paymentMethod === 'dinheiro'} onChange={() => { setPaymentMethod('dinheiro'); }} className="accent-primary" />
-                  <Banknote className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <span className="font-medium">Dinheiro</span>
-                    <p className="text-[10px] text-muted-foreground">Pagamento na retirada</p>
+                <label 
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 group ${
+                    paymentMethod === 'dinheiro' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-border/50 hover:border-primary/30'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${paymentMethod === 'dinheiro' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                    <Banknote className="h-5 w-5" />
                   </div>
+                  <div className="flex-1">
+                    <span className="font-bold block text-foreground">Dinheiro</span>
+                    <p className="text-[10px] text-muted-foreground">Pagamento realizado na retirada</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'dinheiro' ? 'border-primary bg-primary' : 'border-border'}`}>
+                    {paymentMethod === 'dinheiro' && <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in" />}
+                  </div>
+                  <input type="radio" value="dinheiro" checked={paymentMethod === 'dinheiro'} onChange={() => setPaymentMethod('dinheiro')} className="hidden" />
                 </label>
               )}
 
               {orderType === 'entrega' && (
-                <div className="p-3 bg-muted/30 rounded-lg border border-dashed border-border flex items-center gap-2 opacity-60">
-                   <Banknote className="h-4 w-4 text-muted-foreground" />
-                   <p className="text-[10px] text-muted-foreground font-medium italic">Dinheiro não disponível para entrega em domicílio.</p>
+                <div className="p-3 bg-muted/20 rounded-xl border border-dashed border-border/50 flex items-center gap-3 opacity-70">
+                   <div className="p-2 bg-muted rounded-full">
+                    <Banknote className="h-4 w-4 text-muted-foreground" />
+                   </div>
+                   <p className="text-[10px] text-muted-foreground font-medium leading-tight">Dinheiro não disponível para entrega segura em domicílio.</p>
                 </div>
               )}
             </div>

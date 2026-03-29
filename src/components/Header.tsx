@@ -8,7 +8,11 @@ export default function Header() {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return true; // Padrão agora é Dark
+  });
 
   useEffect(() => {
     if (dark) {
@@ -19,12 +23,6 @@ export default function Header() {
       localStorage.setItem('theme', 'light');
     }
   }, [dark]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') setDark(true);
-    else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) setDark(true);
-  }, []);
 
   const handleSignOut = async () => {
     await signOut();

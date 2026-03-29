@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Filter, Calendar, DollarSign, Package } from 'lucide-react';
+import { Search, Filter, Calendar, DollarSign, Package, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 const statuses = ['aguardando_pagamento', 'pendente', 'em andamento', 'indo para entrega', 'concluido', 'recusado', 'cancelado'];
 
@@ -13,6 +14,7 @@ export default function AdminOrders() {
   const [filterDate, setFilterDate] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
@@ -47,6 +49,25 @@ export default function AdminOrders() {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Status atualizado!');
     },
+  });
+  
+  const deleteOrder = useMutation({
+    mutationFn: async (id: string) => {
+      // Pedidos têm itens vinculados. O cascade deve estar configurado no banco, 
+      // mas se não estiver, deletamos os itens primeiro (ou confiamos no banco).
+      const { error } = await supabase.from('orders').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('Pedido removido do histórico!');
+      setOrderToDelete(null);
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error('Erro ao remover pedido.');
+      setOrderToDelete(null);
+    }
   });
 
   if (isLoading) return <div className="p-10 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div><p className="text-muted-foreground">Carregando pedidos...</p></div>;
@@ -181,7 +202,13 @@ export default function AdminOrders() {
             {order.notes && !order.notes.startsWith('Recusado:') && <p className="text-xs text-muted-foreground mt-2 italic">Obs: {order.notes}</p>}
             {order.notes && order.notes.startsWith('Recusado:') && <p className="text-xs text-destructive mt-2 font-medium">{order.notes}</p>}
             
-            <div className="mt-4 pt-4 border-t border-border/50 text-right">
+            <div className="mt-4 pt-4 border-t border-border/50 flex justify-between items-center">
+              <button 
+                onClick={() => setOrderToDelete(order.id)}
+                className="p-2 text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 text-xs"
+              >
+                <Trash2 className="h-4 w-4" /> Excluir
+              </button>
               <Link to={`/pedido/${order.id}`} className="btn-hero text-sm px-4 py-2 inline-block">
                 Acessar Pedido e Chat
               </Link>
@@ -189,6 +216,17 @@ export default function AdminOrders() {
           </div>
         ))
       )}
+
+      <ConfirmationModal 
+        isOpen={!!orderToDelete}
+        title="Excluir Pedido?"
+        message="Esta ação removerá o pedido permanentemente do histórico administrativo."
+        confirmText="Sim, Excluir"
+        cancelText="Cancelar"
+        onConfirm={() => orderToDelete && deleteOrder.mutate(orderToDelete)}
+        onCancel={() => setOrderToDelete(null)}
+        type="danger"
+      />
     </div>
   );
 }

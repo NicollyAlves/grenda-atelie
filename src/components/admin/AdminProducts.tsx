@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
-import { Plus, Trash2, Edit2, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, AlertTriangle } from 'lucide-react';
+import ConfirmationModal from '../ui/ConfirmationModal';
 import { toast } from 'sonner';
 
 interface ProductForm {
@@ -36,6 +37,7 @@ export default function AdminProducts() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [uploading, setUploading] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['admin-products'],
@@ -105,8 +107,15 @@ export default function AdminProducts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       toast.success('Produto removido!');
+      setProductToDelete(null);
     },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error('Erro ao excluir: verifique se há pedidos vinculados a este produto.');
+      setProductToDelete(null);
+    }
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isMain = true) => {
@@ -323,7 +332,7 @@ export default function AdminProducts() {
                 <button onClick={() => openEdit(p)} className="p-2 text-muted-foreground hover:text-foreground transition-colors">
                   <Edit2 className="h-4 w-4" />
                 </button>
-                <button onClick={() => { if (confirm('Remover produto?')) deleteMutation.mutate(p.id); }} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => setProductToDelete(p.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -331,6 +340,17 @@ export default function AdminProducts() {
           ))}
         </div>
       )}
+
+      <ConfirmationModal 
+        isOpen={!!productToDelete}
+        title="Remover Produto?"
+        message="Esta ação é permanente e o produto será removido da loja."
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
+        onConfirm={() => productToDelete && deleteMutation.mutate(productToDelete)}
+        onCancel={() => setProductToDelete(null)}
+        type="danger"
+      />
     </div>
   );
 }
